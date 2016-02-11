@@ -234,10 +234,10 @@ class RegisterTask(Task):
     """Task that will generate the registry for the Mapper"""
     ConfigClass = RegisterConfig
 
-    def openRegistry(self, butler, create=False, dryrun=False, name="registry.sqlite3"):
+    def openRegistry(self, directory, create=False, dryrun=False, name="registry.sqlite3"):
         """Open the registry and return the connection handle.
 
-        @param butler  Data butler, from which the registry file is determined
+        @param directory  Directory in which the registry file will be placed
         @param create  Clobber any existing registry and create a new one?
         @param dryrun  Don't do anything permanent?
         @param name    Filename of the registry
@@ -249,7 +249,7 @@ class RegisterTask(Task):
             def fakeContext():
                 yield
             return fakeContext()
-        registryName = os.path.join(butler.mapper.root, name)
+        registryName = os.path.join(directory, name)
         context = RegistryContext(registryName, self.createTable, create, self.config.permissions)
         return context
 
@@ -435,7 +435,7 @@ class IngestTask(Task):
     def run(self, args):
         """Ingest all specified files and add them to the registry"""
         filenameList = sum([glob(filename) for filename in args.files], [])
-        context = self.register.openRegistry(args.butler, create=args.create, dryrun=args.dryrun)
+        context = self.register.openRegistry(args.butler.mapper.root, create=args.create, dryrun=args.dryrun)
         with context as registry:
             for infile in filenameList:
                 if self.isBadFile(infile, args.badFile):
