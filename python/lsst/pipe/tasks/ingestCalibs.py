@@ -122,6 +122,7 @@ class CalibsRegisterTask(RegisterTask):
             for thisDate, nextDate in itertools.izip(dates[:-1], dates[1:]):
                 valids[thisDate][0] = thisDate
                 valids[thisDate][1] = nextDate - datetime.timedelta(1)
+            valids[dates[-1]][0] = dates[-1]
             valids[dates[-1]][1] = _convertToDate("2037-12-31")  # End of UNIX time
         else:
             # A calib is valid within the validity range (in days) specified.
