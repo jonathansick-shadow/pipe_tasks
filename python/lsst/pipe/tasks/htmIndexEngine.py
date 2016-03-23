@@ -23,11 +23,22 @@ import esutil
 
 class HtmIndexer(object):
     def __init__(self, depth=8):
+        """!Construct the indexer object
+
+        @param[in] depth  depth of the hierarchy to construct
+        """
         self.htm = esutil.htm.HTM(depth)
         # HACK need to call intersect first otherwise it segfaults
         _ = self.htm.intersect(1., 2., 0.00001)
 
     def get_pixel_ids(self, ctrCoord, radius):
+        """!Get all shards that touch a circular aperture
+
+        @param[in] ctrCoord  afwCoord.Coord object of the center of the aperture
+        @param[in] radius  afwGeom.Angle object of the aperture radius
+        @param[out] Return a list of shards, and a boolean array indicating whether the shard touches the
+                    boundary (True) or is fully contained (False).
+        """
         pixel_id_list = self.htm.intersect(ctrCoord.getRa().asDegrees(), ctrCoord.getDec().asDegrees(),
                                            radius.asDegrees(), inclusive=True)
         covered_pixel_id_list = self.htm.intersect(ctrCoord.getRa().asDegrees(), ctrCoord.getDec().asDegrees(),
@@ -36,4 +47,9 @@ class HtmIndexer(object):
         return pixel_id_list, is_on_boundary
 
     def index_points(self, ra_list, dec_list):
+        """!Generate trixel ids for each row in an input file
+
+        @param[in] coord_list  List of coord objects to index
+        @param[out] A list of pixel ids
+        """
         return self.htm.lookup_id(ra_list, dec_list)
