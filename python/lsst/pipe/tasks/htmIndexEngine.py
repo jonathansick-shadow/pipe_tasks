@@ -20,8 +20,14 @@
 # see <https://www.lsstcorp.org/LegalNotices/>.
 #
 import lsst.pex.config as pexConfig
+import lsst.pipe.base as pipeBase
+import lsst.afw.table as afwTable
+import lsst.afw.coord as afwCoord
+import lsst.afw.geom as afwGeom
+from lsst.afw.image import fluxFromABMag, fluxErrFromABMagErr
 
 import esutil
+import numpy
 
 class IngestIndexedReferenceConfig(pexConfig.Config):
     ref_dataset_name = pexConfig.Field(
@@ -97,6 +103,14 @@ list, column names will be discovered from the first line after the skipped head
             default = 8,
             doc = 'Default HTM level.  Level 8 gives ~0.08 sq deg per trixel.',
     )
+
+    def validate(self):
+        pexConfig.Config.validate(self)
+        if not (self.ra_name and self.dec_name and self.mag_column_list):
+            raise ValueError("RA column name, Dec column name and at least one magnitude column must be"+\
+                             " supplied.")
+        if len(self.mag_err_column_map) > 0 and not len(self.mag_column_list) == len(self.mag_err_column_map):
+            raise ValueError("If magnitude errors are provided, all magnitudes must have an error column")
 
 class HtmIndexer(object):
     def __init__(self, depth=8):
