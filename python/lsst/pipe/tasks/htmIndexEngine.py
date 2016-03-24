@@ -133,6 +133,135 @@ class IngestReferenceRunner(pipeBase.TaskRunner):
                 result = result,
             )
 
+class IngestIndexedReferenceTask(pipeBase.CmdLineTask):
+    ConfigClass = IngestIndexedReferenceConfig
+    RunnerClass = IngestReferenceRunner
+    _DefaultName = 'IngestIndexedReferenceTask'
+
+    _flags = ['photometric', 'resolved', 'variable']
+
+    @classmethod
+    def _makeArgumentParser(cls):
+        parser = pipeBase.ArgumentParser(name=cls._DefaultName)
+        parser.add_argument("files", nargs="+", help="Names of files to index")
+        return parser
+
+    def __init__(self, *args, **kwargs):
+        self.butler = kwargs.pop('butler')
+        pipeBase.Task.__init__(self, *args, **kwargs)
+        self.indexer = HtmIndexer(self.config.level)
+
+    def create_indexed_catalog(self, files):
+        rec_num = 0
+        first = True
+        for filename in files:
+            names = True
+            if self.config.colnames:
+                names = self.config.colnames
+            arr = numpy.genfromtxt(filename, dtype=None, skip_header=self.config.header_lines,
+                                   delimiter=self.config.delimiter,
+                                   names=names)
+            index_list = self.indexer.index_points(arr[self.config.ra_name], arr[self.config.dec_name])
+            if first:
+                schema = self.make_schema(arr.dtype)
+                #persist empty catalog to hold the master schema
+                dataId = self.make_data_id('master_schema')
+                self.butler.put(self.get_catalog(dataId, schema), self.config.ref_dataset_name,
+                                dataId=dataId)
+                first = False
+            pixel_ids = set(index_list)
+            shards = []
+            for pixel_id in pixel_ids:
+                dataId = self.make_data_id(pixel_id)
+                catalog = self.get_catalog(dataId, schema)
+                els = numpy.where(index_list == pixel_id)
+                #Just in case someone has only one line in the file.
+                for row in numpy.atleast_1d(arr)[els]:
+                    record = catalog.addNew()
+                    rec_num = self._fill_record(record, row, rec_num)
+                self.butler.put(catalog, self.config.ref_dataset_name, dataId=dataId)
+
+    @staticmethod
+    def make_data_id(pixel_id):
+        return {'pixel_id':pixel_id}
+
+    @staticmethod
+    def compute_coord(row, ra_name, dec_name):
+        return afwCoord.IcrsCoord(row[ra_name]*afwGeom.degrees,
+                                  row[dec_name]*afwGeom.degrees)
+
+    def _set_flags(self, record, row):
+        names = record.schema.getNames()
+        for flag in self._flags:
+            if flag in names:
+                attr_name = 'is_{}_name'.format(flag)
+                record.set(flag, bool(row[getattr(self.config, attr_name)]))
+
+    def _set_mags(self, record, row):
+        for item in self.config.mag_column_list:
+            record.set(item+'_flux', fluxFromABMag(row[item]))
+        if len(self.config.mag_err_column_map) > 0:
+            for err_key in self.config.mag_err_column_map.keys():
+                error_col_name = self.config.mag_err_column_map[err_key]
+                record.set(err_key+'_fluxSigma', fluxErrFromABMagErr(row[error_col_name], row[err_key]))
+
+    def _set_extra(self, record, row):
+        for extra_col in self.config.extra_col_names:
+            record.set(extra_col, row[extra_col])
+
+    def _fill_record(self, record, row, rec_num):
+        record.setCoord(self.compute_coord(row, self.config.ra_name, self.config.dec_name))
+        if self.config.id_name:
+            record.setId(row[self.config.id_name])
+        else:
+            rec_num += 1
+            record.setId(rec_num)
+        # No parents
+        record.setParent(-1)
+
+        self._set_flags(record, row)
+        self._set_mags(record, row)
+        self._set_extra(record, row)
+        return rec_num
+
+    def get_catalog(self, dataId, schema):
+        if self.butler.datasetExists(self.config.ref_dataset_name, dataId=dataId):
+            return self.butler.get(self.config.ref_dataset_name, dataId=dataId)
+        return afwTable.SourceCatalog(schema)
+
+    def make_schema(self, dtype):
+        mag_column_list = self.config.mag_column_list
+        mag_err_column_map = self.config.mag_err_column_map
+        if len(mag_err_column_map) > 0 and (not len(mag_column_list) == len(mag_err_column_map)
+                or not sorted(mag_column_list) == sorted(mag_err_column_map.keys())):
+            raise ValueError("Every magnitude column must have a corresponding error column")
+        # makes a schema with a coord, id and parent_id
+        schema = afwTable.SourceTable.makeMinimalSchema()
+
+        def add_field(name):
+            if dtype[name].kind == 'S':
+                # dealing with a string like thing.  Need to get type and size.
+                at_type = afwTable.aliases[str]
+                at_size = dtype[name].itemsize
+                return schema.addField(name, type=at_type, size=at_size)
+            else:
+                at_type = afwTable.aliases[dtype[name].type]
+                return schema.addField(name, at_type)
+
+        for item in mag_column_list:
+            key = schema.addField(item+'_flux', float)
+        if len(mag_err_column_map) > 0:
+            for err_item in mag_err_column_map.keys():
+                key = schema.addField(err_item+'_fluxSigma', float)
+        for flag in self._flags:
+            attr_name = 'is_{}_name'.format(flag)
+            if getattr(self.config, attr_name):
+                key = schema.addField(flag, 'Flag')
+        for col in self.config.extra_col_names:
+            key = add_field(col)
+        return schema
+
+
 class HtmIndexer(object):
     def __init__(self, depth=8):
         """!Construct the indexer object
