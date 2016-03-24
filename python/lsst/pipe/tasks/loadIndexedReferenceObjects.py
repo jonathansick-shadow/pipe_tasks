@@ -1,0 +1,87 @@
+from __future__ import absolute_import, division, print_function
+# 
+# LSST Data Management System
+#
+# Copyright 2008-2015 AURA/LSST.
+# 
+# This product includes software developed by the
+# LSST Project (http://www.lsst.org/).
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the LSST License Statement and 
+# the GNU General Public License along with this program.  If not, 
+# see <https://www.lsstcorp.org/LegalNotices/>.
+#
+
+from lsst.meas.algorithms import getRefFluxField, LoadReferenceObjectsTask, LoadReferenceObjectsConfig
+from lsst.pipe.tasks.htmIndexEngine import IngestIndexedReferenceTask
+
+import lsst.daf.persistence as dafPersist
+import lsst.pex.config as pexConfig
+import lsst.pipe.base as pipeBase
+__all__ = ["LoadIndexedReferenceObjectsTask"]
+
+class LoadIndexedReferenceObjectConfig(pexConfig.Config):
+    ingest_config_name = pexConfig.Field(
+            dtype = str,
+            default = 'IngestIndexedReferenceTask_config',
+            doc = 'Name of the config dataset used to ingest the reference'
+    )
+
+class LoadIndexedReferenceObjectsTask(LoadReferenceObjectsTask):
+    ConfigClass = LoadIndexedReferenceObjectConfig
+    _DefaultName = 'LoadIndexedReferenceObjectsTask'
+
+    def __init__(self, butler, ingest_factory=IngestIndexedReferenceTask, *args, **kwargs):
+        LoadReferenceObjectsTask.__init__(self, *args, **kwargs)
+        ingest_config = butler.get(self.config.ingest_config_name, immediate=True)
+        ingester = ingest_factory(butler=butler, config=ingest_config)
+        self.indexer = ingester.indexer
+        self.make_data_id = ingester.make_data_id
+        self.ref_dataset_name = ingester.config.ref_dataset_name
+        self.butler = butler
+
+    @pipeBase.timeMethod
+    def loadSkyCircle(self, ctrCoord, radius, filterName=None):
+        id_list, boundary_mask = self.indexer.get_pixel_ids(ctrCoord, radius)
+        shards = self.get_shards(id_list)
+        refCat = self.butler.get(self.ref_dataset_name, dataId=self.make_data_id('master_schema'),
+                                 immediate=True)
+        fluxField = getRefFluxField(schema=refCat.schema, filterName=filterName)
+        for shard, is_on_boundary in zip(shards, boundary_mask):
+            if shard is None:
+                continue
+            if is_on_boundary:
+                refCat.extend(self._trim_to_circle(shard, ctrCoord, radius))
+            else:
+                refCat.extend(shard)
+        # return reference catalog
+        return pipeBase.Struct(
+            refCat = refCat,
+            fluxField = fluxField,
+        )
+
+    def get_shards(self, id_list):
+        shards = []
+        for pixel_id in id_list:
+            if self.butler.datasetExists(self.ref_dataset_name, dataId=self.make_data_id(pixel_id)):
+                shards.append(self.butler.get(self.ref_dataset_name,
+                              dataId=self.make_data_id(pixel_id), immediate=True))
+        return shards
+
+    def _trim_to_circle(self, catalog_shard, ctrCoord, radius):
+        temp_cat = type(catalog_shard)(catalog_shard.schema)
+        for record in catalog_shard:
+            if record.getCoord().angularSeparation(ctrCoord) < radius:
+                temp_cat.append(record)
+        return temp_cat
+
