@@ -19,7 +19,84 @@
 # the GNU General Public License along with this program.  If not,
 # see <https://www.lsstcorp.org/LegalNotices/>.
 #
+import lsst.pex.config as pexConfig
+
 import esutil
+
+class IngestIndexedReferenceConfig(pexConfig.Config):
+    ref_dataset_name = pexConfig.Field(
+            dtype = str,
+            default = 'cal_ref_cat',
+            doc = 'String to pass to the butler to retrieve persisted files.',
+    )
+    ra_name = pexConfig.Field(
+            dtype = str,
+            default = '',
+            doc = "Name of RA column",
+    )
+    dec_name = pexConfig.Field(
+            dtype = str,
+            default = '',
+            doc = "Name of Dec column",
+    )
+    mag_column_list = pexConfig.ListField(
+            dtype = str,
+            default = [],
+            doc = """The values in the reference catalog are assumed to be in AB magnitudes.
+List of column names to use for photometric information.  At least one entry is required."""
+    )
+    mag_err_column_map = pexConfig.DictField(
+            keytype = str,
+            itemtype = str,
+            default = {},
+            doc = "A map of magnitude column name (key) to magnitude error column (value)."
+    )
+    is_photometric_name = pexConfig.Field(
+            dtype = str,
+            default = '',
+            doc = 'Name of column stating if satisfactory for photometric calibration (optional).'
+    )
+    is_resolved_name = pexConfig.Field(
+            dtype = str,
+            default = '',
+            doc = 'Name of column stating if the object is resolved (optional).'
+    )
+    is_variable_name = pexConfig.Field(
+            dtype = str,
+            default = '',
+            doc = 'Name of column stating if the object is measured to be variable (optional).'
+    )
+    id_name = pexConfig.Field(
+            dtype = str,
+            default = '',
+            doc = 'Name of column to use as an identifier (optional).'
+    )
+    extra_col_names = pexConfig.ListField(
+            dtype = str,
+            default = [],
+            doc = 'Extra columns to add to the reference catalog.'
+    )
+    header_lines = pexConfig.Field(
+            dtype = int,
+            default = 0,
+            doc = 'Number of lines to skip when reading the text reference file.'
+    )
+    colnames = pexConfig.ListField(
+            dtype = str,
+            default = [],
+            doc = """An ordered list of column names to use in ingesting the catalog.  With an empty
+list, column names will be discovered from the first line after the skipped header lines."""
+    )
+    delimiter = pexConfig.Field(
+            dtype = str,
+            default = ',',
+            doc = 'Delimiter to use when reading text reference files.  Comma is default.'
+    )
+    level = pexConfig.Field(
+            dtype = int,
+            default = 8,
+            doc = 'Default HTM level.  Level 8 gives ~0.08 sq deg per trixel.',
+    )
 
 class HtmIndexer(object):
     def __init__(self, depth=8):
