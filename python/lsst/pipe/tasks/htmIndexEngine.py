@@ -112,6 +112,27 @@ list, column names will be discovered from the first line after the skipped head
         if len(self.mag_err_column_map) > 0 and not len(self.mag_column_list) == len(self.mag_err_column_map):
             raise ValueError("If magnitude errors are provided, all magnitudes must have an error column")
 
+class IngestReferenceRunner(pipeBase.TaskRunner):
+    """!Task runner for the reference catalog ingester
+    """
+    def run(self, parsedCmd):
+        """!Run the task.
+        Several arguments need to be collected to send on to the task methods.
+
+        @param[in] parsedCmd  Parsed command including command line arguments.
+        @param[out] Struct containing the result of the indexing.
+        """
+        files = parsedCmd.files
+        butler = parsedCmd.butler
+        task = self.TaskClass(config=self.config, log=self.log, butler=butler)
+        task.writeConfig(parsedCmd.butler, clobber=self.clobberConfig, doBackup=self.doBackup)
+
+        result = task.create_indexed_catalog(files)
+        if self.doReturnResults:
+            return Struct(
+                result = result,
+            )
+
 class HtmIndexer(object):
     def __init__(self, depth=8):
         """!Construct the indexer object
