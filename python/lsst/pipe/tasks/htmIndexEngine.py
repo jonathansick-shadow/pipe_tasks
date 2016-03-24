@@ -134,6 +134,13 @@ class IngestReferenceRunner(pipeBase.TaskRunner):
             )
 
 class IngestIndexedReferenceTask(pipeBase.CmdLineTask):
+    """!Class for both producing indexed reference catalogs and for loading them.
+
+    This implements an indexing scheme based on hierarchical triangular mesh (HTM).
+    The term index really means breaking the catalog into localized chunks called
+    shards.  In this case each shard contains the entries from the catalog in a single
+    HTM trixel
+    """
     ConfigClass = IngestIndexedReferenceConfig
     RunnerClass = IngestReferenceRunner
     _DefaultName = 'IngestIndexedReferenceTask'
@@ -142,16 +149,27 @@ class IngestIndexedReferenceTask(pipeBase.CmdLineTask):
 
     @classmethod
     def _makeArgumentParser(cls):
+        """Create an argument parser
+        """
         parser = pipeBase.ArgumentParser(name=cls._DefaultName)
         parser.add_argument("files", nargs="+", help="Names of files to index")
         return parser
 
     def __init__(self, *args, **kwargs):
+        """!Constructor for the HTM indexing engine
+
+        @param[in] butler  dafPersistence.Butler object for reading and writing catalogs
+        """
         self.butler = kwargs.pop('butler')
         pipeBase.Task.__init__(self, *args, **kwargs)
         self.indexer = HtmIndexer(self.config.level)
 
     def create_indexed_catalog(self, files):
+        """!Index a set of files comprising a reference catalog.  Outputs are persisted in the
+        data repository.
+
+        @param[in] files  A list of file names to read.
+        """
         rec_num = 0
         first = True
         for filename in files:
@@ -183,14 +201,28 @@ class IngestIndexedReferenceTask(pipeBase.CmdLineTask):
 
     @staticmethod
     def make_data_id(pixel_id):
+        """!Make a data id.  Meant to be overridden.
+        @param[in] pixel_id  An identifier for the pixel in question.
+        @param[out] dataId (dictionary) 
+        """
         return {'pixel_id':pixel_id}
 
     @staticmethod
     def compute_coord(row, ra_name, dec_name):
+        """!Create a afwCoord object from a numpy.array row
+        @param[in] row  dict like object with ra/dec info in degrees
+        @param[in] ra_name  name of RA key
+        @param[in] dec_name  name of Dec key
+        @param[out] IcrsCoord object constructed from the RA/Dec values
+        """
         return afwCoord.IcrsCoord(row[ra_name]*afwGeom.degrees,
                                   row[dec_name]*afwGeom.degrees)
 
     def _set_flags(self, record, row):
+        """!Set the flags for a record.  Relies on the _flags class attribute
+        @param[in,out] record  SourceCatalog record to modify
+        @param[in] row  dict like object containing flag info
+        """
         names = record.schema.getNames()
         for flag in self._flags:
             if flag in names:
@@ -198,6 +230,10 @@ class IngestIndexedReferenceTask(pipeBase.CmdLineTask):
                 record.set(flag, bool(row[getattr(self.config, attr_name)]))
 
     def _set_mags(self, record, row):
+        """!Set the flux records from the input magnitudes
+        @param[in,out] record  SourceCatalog record to modify
+        @param[in] row  dict like object containing magnitude values
+        """
         for item in self.config.mag_column_list:
             record.set(item+'_flux', fluxFromABMag(row[item]))
         if len(self.config.mag_err_column_map) > 0:
@@ -206,10 +242,19 @@ class IngestIndexedReferenceTask(pipeBase.CmdLineTask):
                 record.set(err_key+'_fluxSigma', fluxErrFromABMagErr(row[error_col_name], row[err_key]))
 
     def _set_extra(self, record, row):
+        """!Copy the extra column information to the record
+        @param[in,out] record  SourceCatalog record to modify
+        @param[in] row  dict like object containing the column values
+        """
         for extra_col in self.config.extra_col_names:
             record.set(extra_col, row[extra_col])
 
     def _fill_record(self, record, row, rec_num):
+        """!Fill a record to put in the persisted indexed catalogs
+
+        @param[in,out] record  afwTable.SourceRecord in a reference catalog to fill.
+        @param[in] row  A row from a numpy array constructed from the input catalogs.
+        """
         record.setCoord(self.compute_coord(row, self.config.ra_name, self.config.dec_name))
         if self.config.id_name:
             record.setId(row[self.config.id_name])
@@ -225,11 +270,22 @@ class IngestIndexedReferenceTask(pipeBase.CmdLineTask):
         return rec_num
 
     def get_catalog(self, dataId, schema):
+        """!Get a catalog from the butler or create it if it doesn't exist
+
+        @param[in] dataId  Identifier for catalog to retrieve
+        @param[in] schema  Schema to use in catalog creation if the butler can't get it
+        @param[out] afwTable.SourceCatalog for the specified identifier
+        """
         if self.butler.datasetExists(self.config.ref_dataset_name, dataId=dataId):
             return self.butler.get(self.config.ref_dataset_name, dataId=dataId)
         return afwTable.SourceCatalog(schema)
 
     def make_schema(self, dtype):
+        """!Make the schema to use in constructing the persisted catalogs.
+
+        @param[in] dtype  A numpy.dtype to use in constructing the schema
+        @param[out] The schema for the output source catalog.
+        """
         mag_column_list = self.config.mag_column_list
         mag_err_column_map = self.config.mag_err_column_map
         if len(mag_err_column_map) > 0 and (not len(mag_column_list) == len(mag_err_column_map)
@@ -277,8 +333,8 @@ class HtmIndexer(object):
 
         @param[in] ctrCoord  afwCoord.Coord object of the center of the aperture
         @param[in] radius  afwGeom.Angle object of the aperture radius
-        @param[out] Return a list of shards, and a boolean array indicating whether the shard touches the
-                    boundary (True) or is fully contained (False).
+        @param[out] A pipeBase.Struct with the list of shards, shards, and a boolean arry, boundary_mask,
+                    indicating whether the shard touches the boundary (True) or is fully contained (False).
         """
         pixel_id_list = self.htm.intersect(ctrCoord.getRa().asDegrees(), ctrCoord.getDec().asDegrees(),
                                            radius.asDegrees(), inclusive=True)
