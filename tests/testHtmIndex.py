@@ -1,5 +1,3 @@
-
-#!/usr/bin/env python
 from __future__ import absolute_import, division, print_function
 #
 # LSST Data Management System
@@ -9,7 +7,7 @@ from __future__ import absolute_import, division, print_function
 # LSST Project (http://www.lsst.org/).
 #
 # This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as 
+# it under the terms of the GNU General Public License as
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
@@ -42,8 +40,10 @@ from lsst.pipe.tasks.loadIndexedReferenceObjects import LoadIndexedReferenceObje
 obs_test_dir = lsst.utils.getPackageDir('obs_test')
 input_dir = os.path.join(obs_test_dir, "data", "input")
 
+
 def make_coord(ra, dec):
     return afwCoord.IcrsCoord(afwGeom.Angle(ra, afwGeom.degrees), afwGeom.Angle(dec, afwGeom.degrees))
+
 
 class HtmIndexTestCase(lsst.utils.tests.TestCase):
     @staticmethod
@@ -62,6 +62,7 @@ class HtmIndexTestCase(lsst.utils.tests.TestCase):
         is_variable = numpy.random.randint(2, size=size)
         extra_col1 = numpy.random.normal(size=size)
         extra_col2 = numpy.random.normal(1000., 100., size=size)
+
         def get_word(word_len):
             return "".join(numpy.random.choice([s for s in string.ascii_letters], word_len))
         extra_col3 = numpy.array([get_word(num) for num in numpy.random.randint(11, size=size)])
@@ -72,13 +73,15 @@ class HtmIndexTestCase(lsst.utils.tests.TestCase):
                              ('val3', '|S11')])
 
         arr = numpy.array(zip(ident, ra, dec, a_mag, a_mag_err, b_mag, b_mag_err, is_photometric, is_resolved,
-                           is_variable, extra_col1, extra_col2, extra_col3), dtype=dtype)
+                              is_variable, extra_col1, extra_col2, extra_col3), dtype=dtype)
         numpy.savetxt(out_path+"/ref.txt", arr, delimiter=",",
                       header="id,ra_icrs,dec_icrs,a,a_err,b,b_err,is_phot,is_res,is_var,val1,val2,val3",
-                      fmt=["%i","%.6g","%.6g","%.4g","%.4g","%.4g","%.4g","%i","%i","%i","%.2g","%.2g","%s"])
+                      fmt=["%i", "%.6g", "%.6g", "%.4g", "%.4g", "%.4g", "%.4g", "%i",
+                           "%i", "%i", "%.2g", "%.2g", "%s"])
         numpy.savetxt(out_path+"/ref_test_delim.txt", arr, delimiter="|",
                       header="id,ra_icrs,dec_icrs,a,a_err,b,b_err,is_phot,is_res,is_var,val1,val2,val3",
-                      fmt=["%i","%.6g","%.6g","%.4g","%.4g","%.4g","%.4g","%i","%i","%i","%.2g","%.2g","%s"])
+                      fmt=["%i", "%.6g", "%.6g", "%.4g", "%.4g", "%.4g", "%.4g", "%i",
+                           "%i", "%i", "%.2g", "%.2g", "%s"])
         return out_path+"/ref.txt", out_path+"/ref_test_delim.txt", arr
 
     @classmethod
@@ -108,9 +111,9 @@ class HtmIndexTestCase(lsst.utils.tests.TestCase):
         config.dec_name = 'dec_icrs'
         config.mag_column_list = ['a', 'b']
         config.id_name = 'id'
-        config.mag_err_column_map = {'a':'a_err', 'b':'b_err'}
-        retVal = IngestIndexedReferenceTask.parseAndRun(args=[input_dir, "--output", cls.test_repo_path,
-                                            cls.sky_catalog_file], config=config)
+        config.mag_err_column_map = {'a': 'a_err', 'b': 'b_err'}
+        IngestIndexedReferenceTask.parseAndRun(args=[input_dir, "--output", cls.test_repo_path,
+                                               cls.sky_catalog_file], config=config)
         cls.test_butler = dafPersist.Butler(cls.test_repo_path)
 
     @classmethod
@@ -153,21 +156,22 @@ class HtmIndexTestCase(lsst.utils.tests.TestCase):
         default_config.ra_name = 'ra_icrs'
         default_config.dec_name = 'dec_icrs'
         default_config.mag_column_list = ['a', 'b']
-        default_config.mag_err_column_map = {'a':'a_err'}
+        default_config.mag_err_column_map = {'a': 'a_err'}
         # should raise since all columns need an error column if any do
         self.assertRaises(ValueError, IngestIndexedReferenceTask.parseAndRun, args=[input_dir, "--output",
                           self.out_path+"/output", self.sky_catalog_file], config=default_config)
         # test with multiple files and correct config
-        default_config.mag_err_column_map = {'a':'a_err', 'b':'b_err'}
-        retVal = IngestIndexedReferenceTask.parseAndRun(args=[input_dir, "--output", self.out_path+"/output_multifile",
-                                      self.sky_catalog_file, self.sky_catalog_file], 
-                                      config=default_config)
+        default_config.mag_err_column_map = {'a': 'a_err', 'b': 'b_err'}
+        IngestIndexedReferenceTask.parseAndRun(
+            args=[input_dir, "--output", self.out_path+"/output_multifile",
+                  self.sky_catalog_file, self.sky_catalog_file],
+            config=default_config)
         # test with config overrides
         default_config = IngestIndexedReferenceTask.ConfigClass()
         default_config.ra_name = 'ra'
         default_config.dec_name = 'dec'
         default_config.mag_column_list = ['a', 'b']
-        default_config.mag_err_column_map = {'a':'a_err', 'b':'b_err'}
+        default_config.mag_err_column_map = {'a': 'a_err', 'b': 'b_err'}
         default_config.ref_dataset_name = 'other_photo_astro_ref'
         default_config.level = 10
         default_config.is_photometric_name = 'is_phot'
@@ -180,8 +184,9 @@ class HtmIndexTestCase(lsst.utils.tests.TestCase):
                                    'is_var', 'val1', 'val2', 'val3']
         default_config.delimiter = '|'
         # this also tests changing the delimiter
-        retVal = IngestIndexedReferenceTask.parseAndRun(args=[input_dir, "--output", self.out_path+"/output_override",
-                                            self.sky_catalog_file_delim], config=default_config)
+        IngestIndexedReferenceTask.parseAndRun(
+            args=[input_dir, "--output", self.out_path+"/output_override",
+                  self.sky_catalog_file_delim], config=default_config)
 
     def testQuery(self):
         loader = LoadIndexedReferenceObjectsTask(self.test_butler)
@@ -199,12 +204,14 @@ class HtmIndexTestCase(lsst.utils.tests.TestCase):
             else:
                 self.assertEqual(len(self.comp_cats[tupl]), 0)
 
+
 def suite():
     lsst.utils.tests.init()
     suites = []
     suites += unittest.makeSuite(HtmIndexTestCase)
     suites += unittest.makeSuite(lsst.utils.tests.MemoryTestCase)
     return unittest.TestSuite(suites)
+
 
 def run(shouldExit=False):
     lsst.utils.tests.run(suite(), shouldExit)

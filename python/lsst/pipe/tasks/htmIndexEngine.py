@@ -29,88 +29,90 @@ from lsst.afw.image import fluxFromABMag, fluxErrFromABMagErr
 import esutil
 import numpy
 
+
 class IngestIndexedReferenceConfig(pexConfig.Config):
     ref_dataset_name = pexConfig.Field(
-            dtype = str,
-            default = 'cal_ref_cat',
-            doc = 'String to pass to the butler to retrieve persisted files.',
+        dtype=str,
+        default='cal_ref_cat',
+        doc='String to pass to the butler to retrieve persisted files.',
     )
     ra_name = pexConfig.Field(
-            dtype = str,
-            default = '',
-            doc = "Name of RA column",
+        dtype=str,
+        default='',
+        doc="Name of RA column",
     )
     dec_name = pexConfig.Field(
-            dtype = str,
-            default = '',
-            doc = "Name of Dec column",
+        dtype=str,
+        default='',
+        doc="Name of Dec column",
     )
     mag_column_list = pexConfig.ListField(
-            dtype = str,
-            default = [],
-            doc = """The values in the reference catalog are assumed to be in AB magnitudes.
+        dtype=str,
+        default=[],
+        doc="""The values in the reference catalog are assumed to be in AB magnitudes.
 List of column names to use for photometric information.  At least one entry is required."""
     )
     mag_err_column_map = pexConfig.DictField(
-            keytype = str,
-            itemtype = str,
-            default = {},
-            doc = "A map of magnitude column name (key) to magnitude error column (value)."
+        keytype=str,
+        itemtype=str,
+        default={},
+        doc="A map of magnitude column name (key) to magnitude error column (value)."
     )
     is_photometric_name = pexConfig.Field(
-            dtype = str,
-            default = '',
-            doc = 'Name of column stating if satisfactory for photometric calibration (optional).'
+        dtype=str,
+        default='',
+        doc='Name of column stating if satisfactory for photometric calibration (optional).'
     )
     is_resolved_name = pexConfig.Field(
-            dtype = str,
-            default = '',
-            doc = 'Name of column stating if the object is resolved (optional).'
+        dtype=str,
+        default='',
+        doc='Name of column stating if the object is resolved (optional).'
     )
     is_variable_name = pexConfig.Field(
-            dtype = str,
-            default = '',
-            doc = 'Name of column stating if the object is measured to be variable (optional).'
+        dtype=str,
+        default='',
+        doc='Name of column stating if the object is measured to be variable (optional).'
     )
     id_name = pexConfig.Field(
-            dtype = str,
-            default = '',
-            doc = 'Name of column to use as an identifier (optional).'
+        dtype=str,
+        default='',
+        doc='Name of column to use as an identifier (optional).'
     )
     extra_col_names = pexConfig.ListField(
-            dtype = str,
-            default = [],
-            doc = 'Extra columns to add to the reference catalog.'
+        dtype=str,
+        default=[],
+        doc='Extra columns to add to the reference catalog.'
     )
     header_lines = pexConfig.Field(
-            dtype = int,
-            default = 0,
-            doc = 'Number of lines to skip when reading the text reference file.'
+        dtype=int,
+        default=0,
+        doc='Number of lines to skip when reading the text reference file.'
     )
     colnames = pexConfig.ListField(
-            dtype = str,
-            default = [],
-            doc = """An ordered list of column names to use in ingesting the catalog.  With an empty
+        dtype=str,
+        default=[],
+        doc="""An ordered list of column names to use in ingesting the catalog.  With an empty
 list, column names will be discovered from the first line after the skipped header lines."""
     )
     delimiter = pexConfig.Field(
-            dtype = str,
-            default = ',',
-            doc = 'Delimiter to use when reading text reference files.  Comma is default.'
+        dtype=str,
+        default=',',
+        doc='Delimiter to use when reading text reference files.  Comma is default.'
     )
     level = pexConfig.Field(
-            dtype = int,
-            default = 8,
-            doc = 'Default HTM level.  Level 8 gives ~0.08 sq deg per trixel.',
+        dtype=int,
+        default=8,
+        doc='Default HTM level.  Level 8 gives ~0.08 sq deg per trixel.',
     )
 
     def validate(self):
         pexConfig.Config.validate(self)
         if not (self.ra_name and self.dec_name and self.mag_column_list):
-            raise ValueError("RA column name, Dec column name and at least one magnitude column must be"+\
+            raise ValueError("RA column name, Dec column name and at least one magnitude column must be" +
                              " supplied.")
         if len(self.mag_err_column_map) > 0 and not len(self.mag_column_list) == len(self.mag_err_column_map):
             raise ValueError("If magnitude errors are provided, all magnitudes must have an error column")
+
 
 class IngestReferenceRunner(pipeBase.TaskRunner):
     """!Task runner for the reference catalog ingester
@@ -129,9 +131,10 @@ class IngestReferenceRunner(pipeBase.TaskRunner):
 
         result = task.create_indexed_catalog(files)
         if self.doReturnResults:
-            return Struct(
+            return pipeBase.Struct(
                 result = result,
             )
+
 
 class IngestIndexedReferenceTask(pipeBase.CmdLineTask):
     """!Class for both producing indexed reference catalogs and for loading them.
@@ -182,18 +185,17 @@ class IngestIndexedReferenceTask(pipeBase.CmdLineTask):
             index_list = self.indexer.index_points(arr[self.config.ra_name], arr[self.config.dec_name])
             if first:
                 schema = self.make_schema(arr.dtype)
-                #persist empty catalog to hold the master schema
+                # persist empty catalog to hold the master schema
                 dataId = self.make_data_id('master_schema')
                 self.butler.put(self.get_catalog(dataId, schema), self.config.ref_dataset_name,
                                 dataId=dataId)
                 first = False
             pixel_ids = set(index_list)
-            shards = []
             for pixel_id in pixel_ids:
                 dataId = self.make_data_id(pixel_id)
                 catalog = self.get_catalog(dataId, schema)
                 els = numpy.where(index_list == pixel_id)
-                #Just in case someone has only one line in the file.
+                # Just in case someone has only one line in the file.
                 for row in numpy.atleast_1d(arr)[els]:
                     record = catalog.addNew()
                     rec_num = self._fill_record(record, row, rec_num)
@@ -203,9 +205,9 @@ class IngestIndexedReferenceTask(pipeBase.CmdLineTask):
     def make_data_id(pixel_id):
         """!Make a data id.  Meant to be overridden.
         @param[in] pixel_id  An identifier for the pixel in question.
-        @param[out] dataId (dictionary) 
+        @param[out] dataId (dictionary)
         """
-        return {'pixel_id':pixel_id}
+        return {'pixel_id': pixel_id}
 
     @staticmethod
     def compute_coord(row, ra_name, dec_name):
@@ -288,8 +290,9 @@ class IngestIndexedReferenceTask(pipeBase.CmdLineTask):
         """
         mag_column_list = self.config.mag_column_list
         mag_err_column_map = self.config.mag_err_column_map
-        if len(mag_err_column_map) > 0 and (not len(mag_column_list) == len(mag_err_column_map)
-                or not sorted(mag_column_list) == sorted(mag_err_column_map.keys())):
+        if len(mag_err_column_map) > 0 and (
+            not len(mag_column_list) == len(mag_err_column_map) or
+                not sorted(mag_column_list) == sorted(mag_err_column_map.keys())):
             raise ValueError("Every magnitude column must have a corresponding error column")
         # makes a schema with a coord, id and parent_id
         schema = afwTable.SourceTable.makeMinimalSchema()
@@ -305,16 +308,16 @@ class IngestIndexedReferenceTask(pipeBase.CmdLineTask):
                 return schema.addField(name, at_type)
 
         for item in mag_column_list:
-            key = schema.addField(item+'_flux', float)
+            schema.addField(item+'_flux', float)
         if len(mag_err_column_map) > 0:
             for err_item in mag_err_column_map.keys():
-                key = schema.addField(err_item+'_fluxSigma', float)
+                schema.addField(err_item+'_fluxSigma', float)
         for flag in self._flags:
             attr_name = 'is_{}_name'.format(flag)
             if getattr(self.config, attr_name):
-                key = schema.addField(flag, 'Flag')
+                schema.addField(flag, 'Flag')
         for col in self.config.extra_col_names:
-            key = add_field(col)
+            add_field(col)
         return schema
 
 
@@ -326,7 +329,7 @@ class HtmIndexer(object):
         """
         self.htm = esutil.htm.HTM(depth)
         # HACK need to call intersect first otherwise it segfaults
-        _ = self.htm.intersect(1., 2., 0.00001)
+        self.htm.intersect(1., 2., 0.00001)
 
     def get_pixel_ids(self, ctrCoord, radius):
         """!Get all shards that touch a circular aperture
@@ -338,7 +341,8 @@ class HtmIndexer(object):
         """
         pixel_id_list = self.htm.intersect(ctrCoord.getRa().asDegrees(), ctrCoord.getDec().asDegrees(),
                                            radius.asDegrees(), inclusive=True)
-        covered_pixel_id_list = self.htm.intersect(ctrCoord.getRa().asDegrees(), ctrCoord.getDec().asDegrees(),
+        covered_pixel_id_list = self.htm.intersect(ctrCoord.getRa().asDegrees(),
+                                                   ctrCoord.getDec().asDegrees(),
                                                    radius.asDegrees(), inclusive=False)
         is_on_boundary = (pixel_id not in covered_pixel_id_list for pixel_id in pixel_id_list)
         return pixel_id_list, is_on_boundary
