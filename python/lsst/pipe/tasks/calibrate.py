@@ -31,6 +31,7 @@ from .photoCal import PhotoCalTask
 
 __all__ = ["CalibrateConfig", "CalibrateTask"]
 
+
 class CalibrateConfig(pexConfig.Config):
     """Config for CalibrateTask"""
     doWrite = pexConfig.Field(
@@ -42,7 +43,7 @@ class CalibrateConfig(pexConfig.Config):
         dtype = bool,
         default = True,
         doc = "Include HeavyFootprint data in source table? If false then heavy footprints "
-            "are saved as normal footprints, which saves some space",
+        "are saved as normal footprints, which saves some space",
     )
     doWriteMatches = pexConfig.Field(
         dtype = bool,
@@ -85,11 +86,11 @@ class CalibrateConfig(pexConfig.Config):
         dtype = str,
         default = ("calib_psfCandidate", "calib_psfUsed", "calib_psfReserved"),
         doc = "Fields to copy from the icSource catalog to the output catalog for matching sources "
-            "Any missing fields will trigger a RuntimeError exception. "
-            "If detectAndMeasure.doMeasureApCorr is True and detectAndMeasure cannot determine its own "
-            "suitable candidates, then this list must include "
-            "config.detectAndMeasure.measureApCorr.inputFilterFlag. "
-            "Ignored if icSourceCat is not provided."
+        "Any missing fields will trigger a RuntimeError exception. "
+        "If detectAndMeasure.doMeasureApCorr is True and detectAndMeasure cannot determine its own "
+        "suitable candidates, then this list must include "
+        "config.detectAndMeasure.measureApCorr.inputFilterFlag. "
+        "Ignored if icSourceCat is not provided."
     )
     matchRadiusPix = pexConfig.Field(
         dtype = float,
@@ -104,18 +105,18 @@ class CalibrateConfig(pexConfig.Config):
         self.detectAndMeasure.measurement.doApplyApCorr = "yes"
 
 
-## \addtogroup LSST_task_documentation
-## \{
-## \page CalibrateTask
-## \ref CalibrateTask_ "CalibrateTask"
-## \copybrief CalibrateTask
-## \}
+# \addtogroup LSST_task_documentation
+# \{
+# \page CalibrateTask
+# \ref CalibrateTask_ "CalibrateTask"
+# \copybrief CalibrateTask
+# \}
 
 class CalibrateTask(pipeBase.CmdLineTask):
     """!Calibrate an exposure: measure sources and perform astrometric and photometric calibration
 
     @anchor CalibrateTask_
-    
+
     @section pipe_tasks_calibrate_Contents  Contents
 
      - @ref pipe_tasks_calibrate_Purpose
@@ -252,7 +253,7 @@ class CalibrateTask(pipeBase.CmdLineTask):
             if missingFieldNames:
                 raise RuntimeError(
                     "isSourceCat is missing fields %s specified in icSourceFieldsToCopy" %
-                     (missingFieldNames,))
+                    (missingFieldNames,))
 
             # produce a temporary schema to pass to the subtasks; finalize it later
             self.schema = self.schemaMapper.editOutputSchema()
@@ -303,7 +304,7 @@ class CalibrateTask(pipeBase.CmdLineTask):
         if doUnpersist:
             if None in (exposure, background, icSourceCat):
                 raise RuntimeError("doUnpersist true; exposure, background and icSourceCat "
-                    "must all be None")
+                                   "must all be None")
             exposure = dataRef.get("icExp", immediate=True)
             background = dataRef.get("icExpBackground", immediate=True)
             icSourceCat = dataRef.get("icSourceCat", immediate=True)
@@ -478,7 +479,7 @@ class CalibrateTask(pipeBase.CmdLineTask):
         """
         if self.schemaMapper is None:
             raise RuntimeError("To copy icSource fields you must specify icSourceSchema "
-                "and icSourceKeys when constructing this task")
+                               "and icSourceKeys when constructing this task")
         if icSourceCat is None or sourceCat is None:
             raise RuntimeError("icSourceCat and sourceCat must both be specified")
         if len(self.config.icSourceFieldsToCopy) == 0:
@@ -494,7 +495,7 @@ class CalibrateTask(pipeBase.CmdLineTask):
         # Because we had to allow multiple matches to handle parents, we now need to
         # prune to the best matches
         bestMatches = {}  # closest matches as a dict of icSourceCat source ID:
-                          #   (icSourceCat source, sourceCat source, distance in pixels)
+        #   (icSourceCat source, sourceCat source, distance in pixels)
         for m0, m1, d in matches:
             id0 = m0.getId()
             match = bestMatches.get(id0)
@@ -508,7 +509,7 @@ class CalibrateTask(pipeBase.CmdLineTask):
         numUniqueSources = len(set(m[1].getId() for m in matches))
         if numUniqueSources != numMatches:
             self.log.warn("%d icSourceCat sources matched only %d sourceCat sources" %
-                (numMatches, numUniqueSources))
+                          (numMatches, numUniqueSources))
 
         self.log.info("Copying flags from icSourceCat to sourceCat for %s sources" % (numMatches,))
 

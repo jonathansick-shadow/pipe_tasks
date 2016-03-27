@@ -40,6 +40,7 @@ except ImportError:
 
 __all__ = ["CoaddBaseTask", "getSkyInfo"]
 
+
 class CoaddBaseConfig(pexConfig.Config):
     """Config for CoaddBaseTask
     """
@@ -69,11 +70,14 @@ class CoaddBaseConfig(pexConfig.Config):
         default = False
     )
 
+
 class CoaddTaskRunner(pipeBase.TaskRunner):
+
     @staticmethod
     def getTargetList(parsedCmd, **kwargs):
         return pipeBase.TaskRunner.getTargetList(parsedCmd, selectDataList=parsedCmd.selectId.dataList,
                                                  **kwargs)
+
 
 class CoaddBaseTask(pipeBase.CmdLineTask):
     """Base class for coaddition.
@@ -139,7 +143,7 @@ class CoaddBaseTask(pipeBase.CmdLineTask):
             raise RuntimeError(
                 "Cannot use improved calibrations for %s because meas_mosaic could not be imported."
                 % dataRef.dataId
-                )
+            )
         else:
             applyMosaicResults(dataRef, calexp=exposure)
         return exposure
@@ -188,6 +192,7 @@ class CoaddBaseTask(pipeBase.CmdLineTask):
         self.log.info("Persisting %s" % objName)
         dataRef.put(obj, objName)
 
+
 class SelectDataIdContainer(pipeBase.DataIdContainer):
     """A dataId container for inputs to be selected.
 
@@ -196,6 +201,7 @@ class SelectDataIdContainer(pipeBase.DataIdContainer):
     This is most useful when used with multiprocessing, as input headers are
     only read once.
     """
+
     def makeDataRefList(self, namespace):
         """Add a dataList containing useful information for selecting images"""
         super(SelectDataIdContainer, self).makeDataRefList(namespace)
@@ -209,6 +215,7 @@ class SelectDataIdContainer(pipeBase.DataIdContainer):
                 namespace.log.warn("Unable to construct Wcs from %s" % (ref.dataId))
                 continue
             self.dataList.append(data)
+
 
 def getSkyInfo(coaddName, patchRef):
     """!Return SkyMap, tract and patch
@@ -238,6 +245,7 @@ def getSkyInfo(coaddName, patchRef):
         wcs = tractInfo.getWcs(),
         bbox = patchInfo.getOuterBBox(),
     )
+
 
 def scaleVariance(maskedImage, maskPlanes, log=None):
     """Scale the variance in a maskedImage

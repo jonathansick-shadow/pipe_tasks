@@ -1,8 +1,8 @@
 #!/usr/bin/env python
-# 
+#
 # LSST Data Management System
 # Copyright 2008-2015 AURA/LSST.
-# 
+#
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
 #
@@ -10,14 +10,14 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
-# You should have received a copy of the LSST License Statement and 
-# the GNU General Public License along with this program.  If not, 
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
 # see <https://www.lsstcorp.org/LegalNotices/>.
 #
 import numpy
@@ -61,6 +61,7 @@ def _makeGetSchemaCatalogs(datasetSuffix):
 
     datasetSuffix:  Suffix of dataset name, e.g., "src" for "deepCoadd_src"
     """
+
     def getSchemaCatalogs(self):
         """Return a dict of empty catalogs for each catalog dataset produced by this task."""
         src = afwTable.SourceCatalog(self.schema)
@@ -68,6 +69,7 @@ def _makeGetSchemaCatalogs(datasetSuffix):
             src.getTable().setMetadata(self.algMetadata)
         return {self.config.coaddName + "Coadd_" + datasetSuffix: src}
     return getSchemaCatalogs
+
 
 def _makeMakeIdFactory(datasetName):
     """Construct a makeIdFactory instance method
@@ -77,6 +79,7 @@ def _makeMakeIdFactory(datasetName):
 
     datasetName:  Dataset name without the coadd name prefix, e.g., "CoaddId" for "deepCoaddId"
     """
+
     def makeIdFactory(self, dataRef):
         """Return an IdFactory for setting the detection identifiers
 
@@ -87,6 +90,7 @@ def _makeMakeIdFactory(datasetName):
         expId = long(dataRef.get(self.config.coaddName + datasetName))
         return afwTable.IdFactory.makeSource(expId, 64 - expBits)
     return makeIdFactory
+
 
 def getShortFilterName(name):
     """Given a longer, camera-specific filter name (e.g. "HSC-I") return its shorthand name ("i").
@@ -116,12 +120,13 @@ class DetectCoaddSourcesConfig(Config):
         self.detection.isotropicGrow = True
         self.detection.background.undersampleStyle = 'REDUCE_INTERP_ORDER'
 
-## \addtogroup LSST_task_documentation
-## \{
-## \page DetectCoaddSourcesTask
-## \ref DetectCoaddSourcesTask_ "DetectCoaddSourcesTask"
-## \copybrief DetectCoaddSourcesTask
-## \}
+# \addtogroup LSST_task_documentation
+# \{
+# \page DetectCoaddSourcesTask
+# \ref DetectCoaddSourcesTask_ "DetectCoaddSourcesTask"
+# \copybrief DetectCoaddSourcesTask
+# \}
+
 
 class DetectCoaddSourcesTask(CmdLineTask):
     """!
@@ -294,6 +299,7 @@ class DetectCoaddSourcesTask(CmdLineTask):
 
 ##############################################################################################################
 
+
 class MergeSourcesRunner(TaskRunner):
     """!
     \anchor MergeSourcesRunner_
@@ -301,6 +307,7 @@ class MergeSourcesRunner(TaskRunner):
     \brief Task runner for the \ref MergeSourcesTask_ "MergeSourcesTask". Required because the run method
     requires a list of dataRefs rather than a single dataRef.
     """
+
     def makeTask(self, parsedCmd=None, args=None):
         """!
         \brief Provide a butler to the Task constructor.
@@ -330,7 +337,7 @@ class MergeSourcesRunner(TaskRunner):
         \throws RuntimeError if multiple references are provided for the same combination of tract, patch and
         filter
         """
-        refList = {} # Will index this as refList[tract][patch][filter] = ref
+        refList = {}  # Will index this as refList[tract][patch][filter] = ref
         for ref in parsedCmd.id.refList:
             tract = ref.dataId["tract"]
             patch = ref.dataId["patch"]
@@ -546,24 +553,25 @@ class MergeDetectionsConfig(MergeSourcesConfig):
     skySourceRadius = Field(dtype=float, default=8,
                             doc="Radius, in pixels, of sky objects")
     skyGrowDetectedFootprints = Field(dtype=int, default=0,
-                                     doc="Number of pixels to grow the detected footprint mask when adding sky objects")
+                                      doc="Number of pixels to grow the detected footprint mask when adding sky objects")
     nSkySourcesPerPatch = Field(dtype=int, default=0,
                                 doc="Try to add this many sky objects to the mergeDet list, which will\n"
                                 "then be measured along with the detected objects in sourceMeasurementTask")
     nTrialSkySourcesPerPatch = Field(dtype=int, default=None, optional=True,
-                                doc="Maximum number of trial sky object positions\n"
+                                     doc="Maximum number of trial sky object positions\n"
                                      "(default: nSkySourcesPerPatch*nTrialSkySourcesPerPatchMultiplier)")
     nTrialSkySourcesPerPatchMultiplier = Field(dtype=int, default=5,
                                                doc="Set nTrialSkySourcesPerPatch to\n"
                                                "    nSkySourcesPerPatch*nTrialSkySourcesPerPatchMultiplier\n"
                                                "if nTrialSkySourcesPerPatch is None")
 
-## \addtogroup LSST_task_documentation
-## \{
-## \page MergeDetectionsTask
-## \ref MergeDetectionsTask_ "MergeDetectionsTask"
-## \copybrief MergeDetectionsTask
-## \}
+# \addtogroup LSST_task_documentation
+# \{
+# \page MergeDetectionsTask
+# \ref MergeDetectionsTask_ "MergeDetectionsTask"
+# \copybrief MergeDetectionsTask
+# \}
+
 
 class MergeDetectionsTask(MergeSourcesTask):
     """!
@@ -706,7 +714,8 @@ class MergeDetectionsTask(MergeSourcesTask):
         #
         # Add extra sources that correspond to blank sky
         #
-        skySourceFootprints = self.getSkySourceFootprints(mergedList, skyInfo, self.config.skyGrowDetectedFootprints)
+        skySourceFootprints = self.getSkySourceFootprints(
+            mergedList, skyInfo, self.config.skyGrowDetectedFootprints)
         if skySourceFootprints:
             key = mergedList.schema.find("merge_footprint_%s" % self.config.skyFilterName).key
 
@@ -823,6 +832,7 @@ class MergeDetectionsTask(MergeSourcesTask):
 
 ##############################################################################################################
 
+
 class MeasureMergedCoaddSourcesConfig(Config):
     """!
     \anchor MeasureMergedCoaddSourcesConfig_
@@ -851,12 +861,13 @@ class MeasureMergedCoaddSourcesConfig(Config):
         self.measurement.plugins['base_PixelFlags'].masksFpAnywhere = ['CLIPPED']
         self.measurement.doApplyApCorr = "yes"
 
-## \addtogroup LSST_task_documentation
-## \{
-## \page MeasureMergedCoaddSourcesTask
-## \ref MeasureMergedCoaddSourcesTask_ "MeasureMergedCoaddSourcesTask"
-## \copybrief MeasureMergedCoaddSourcesTask
-## \}
+# \addtogroup LSST_task_documentation
+# \{
+# \page MeasureMergedCoaddSourcesTask
+# \ref MeasureMergedCoaddSourcesTask_ "MeasureMergedCoaddSourcesTask"
+# \copybrief MeasureMergedCoaddSourcesTask
+# \}
+
 
 class MeasureMergedCoaddSourcesTask(CmdLineTask):
     """!
@@ -970,7 +981,7 @@ class MeasureMergedCoaddSourcesTask(CmdLineTask):
     ConfigClass = MeasureMergedCoaddSourcesConfig
     RunnerClass = ButlerInitializedTaskRunner
     getSchemaCatalogs = _makeGetSchemaCatalogs("meas")
-    makeIdFactory = _makeMakeIdFactory("MergedCoaddId") # The IDs we already have are of this type
+    makeIdFactory = _makeMakeIdFactory("MergedCoaddId")  # The IDs we already have are of this type
 
     @classmethod
     def _makeArgumentParser(cls):
@@ -1028,7 +1039,8 @@ class MeasureMergedCoaddSourcesTask(CmdLineTask):
             self.deblend.run(exposure, sources, exposure.getPsf())
 
             bigKey = sources.schema["deblend_parentTooBig"].asKey()
-            numBig = sum((s.get(bigKey) for s in sources)) # catalog is non-contiguous so can't extract column
+            # catalog is non-contiguous so can't extract column
+            numBig = sum((s.get(bigKey) for s in sources))
             if numBig > 0:
                 self.log.warn("Patch %s contains %d large footprints that were not deblended" %
                               (patchRef.dataId, numBig))
@@ -1104,6 +1116,7 @@ class MeasureMergedCoaddSourcesTask(CmdLineTask):
 
 ##############################################################################################################
 
+
 class MergeMeasurementsConfig(MergeSourcesConfig):
     """!
     \anchor MergeMeasurementsConfig_
@@ -1124,12 +1137,13 @@ class MergeMeasurementsConfig(MergeSourcesConfig):
                       "than this value (and the S/N in the priority band is less than minSN) "
                       "use the band with the largest S/N as the reference band")
 
-## \addtogroup LSST_task_documentation
-## \{
-## \page MergeMeasurementsTask
-## \ref MergeMeasurementsTask_ "MergeMeasurementsTask"
-## \copybrief MergeMeasurementsTask
-## \}
+# \addtogroup LSST_task_documentation
+# \{
+# \page MergeMeasurementsTask
+# \ref MergeMeasurementsTask_ "MergeMeasurementsTask"
+# \copybrief MergeMeasurementsTask
+# \}
+
 
 class MergeMeasurementsTask(MergeSourcesTask):
     """!
@@ -1249,7 +1263,6 @@ class MergeMeasurementsTask(MergeSourcesTask):
             except:
                 self.log.warn("merge_peak is not set for pseudo-filter %s" % filt)
 
-
     def mergeCatalogs(self, catalogs, patchRef):
         """!
         Merge measurement catalogs to create a single reference catalog for forced photometry
@@ -1330,7 +1343,7 @@ class MergeMeasurementsTask(MergeSourcesTask):
                 bestRecord = priorityRecord
                 bestFlagKeys = priorityFlagKeys
             elif (prioritySN < self.config.minSN and (maxSN - prioritySN) > self.config.minSNDiff and
-                maxSNRecord is not None):
+                  maxSNRecord is not None):
                 bestRecord = maxSNRecord
                 bestFlagKeys = maxSNFlagKeys
             elif priorityRecord is not None:
@@ -1341,7 +1354,7 @@ class MergeMeasurementsTask(MergeSourcesTask):
                 outputRecord = mergedCatalog.addNew()
                 outputRecord.assign(bestRecord, self.schemaMapper)
                 outputRecord.set(bestFlagKeys.output, True)
-            else: # if we didn't find any records
+            else:  # if we didn't find any records
                 raise ValueError("Error in inputs to MergeCoaddMeasurements: no valid reference for %s" %
                                  inputRecord.getId())
 

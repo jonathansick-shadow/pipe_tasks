@@ -32,6 +32,7 @@ from lsst.meas.base import BasePlugin, SingleFrameMeasurementTask, MeasureApCorr
 
 __all__ = ["DetectAndMeasureConfig", "DetectAndMeasureTask"]
 
+
 class DetectAndMeasureConfig(pexConfig.Config):
     """Config for DetectAndMeasureTask"""
     detection = pexConfig.ConfigurableField(
@@ -65,18 +66,18 @@ class DetectAndMeasureConfig(pexConfig.Config):
         pexConfig.Config.setDefaults(self)
 
 
-## \addtogroup LSST_task_documentation
-## \{
-## \page DetectAndMeasureTask
-## \ref DetectAndMeasureTask_ "DetectAndMeasureTask"
-## \copybrief DetectAndMeasureTask
-## \}
+# \addtogroup LSST_task_documentation
+# \{
+# \page DetectAndMeasureTask
+# \ref DetectAndMeasureTask_ "DetectAndMeasureTask"
+# \copybrief DetectAndMeasureTask
+# \}
 
 class DetectAndMeasureTask(pipeBase.Task):
     """!Detect and deblend sources and measure them using single-frame measurement
 
     @anchor DetectAndMeasureTask_
-    
+
     @section pipe_tasks_detectAndMeasure_Contents  Contents
 
      - @ref pipe_tasks_detectAndMeasure_Purpose

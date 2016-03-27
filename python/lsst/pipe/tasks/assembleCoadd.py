@@ -39,12 +39,13 @@ from .scaleZeroPoint import ScaleZeroPointTask
 from .coaddHelpers import groupPatchExposures, getGroupDataRef
 from lsst.meas.algorithms import SourceDetectionTask
 
-__all__ = ["AssembleCoaddTask","SafeClipAssembleCoaddTask"]
+__all__ = ["AssembleCoaddTask", "SafeClipAssembleCoaddTask"]
+
 
 class AssembleCoaddConfig(CoaddBaseTask.ConfigClass):
     subregionSize = pexConfig.ListField(
         dtype = int,
-        doc = "Width, height of stack subregion size; " \
+        doc = "Width, height of stack subregion size; "
               "make small enough that a full stack of images will fit into memory at once.",
         length = 2,
         default = (2000, 2000),
@@ -82,7 +83,7 @@ class AssembleCoaddConfig(CoaddBaseTask.ConfigClass):
         doc = "Task to match backgrounds",
     )
     maxMatchResidualRatio = pexConfig.Field(
-        doc = "Maximum ratio of the mean squared error of the background matching model to the variance " \
+        doc = "Maximum ratio of the mean squared error of the background matching model to the variance "
         "of the difference in backgrounds",
         dtype = float,
         default = 1.1
@@ -98,14 +99,14 @@ class AssembleCoaddConfig(CoaddBaseTask.ConfigClass):
         default = True,
     )
     doMatchBackgrounds = pexConfig.Field(
-        doc = "Match backgrounds of coadd temp exposures before coadding them? " \
+        doc = "Match backgrounds of coadd temp exposures before coadding them? "
         "If False, the coadd temp expsosures must already have been background subtracted or matched",
         dtype = bool,
         default = True,
     )
     autoReference = pexConfig.Field(
-        doc = "Automatically select the coadd temp exposure to use as a reference for background matching? " \
-              "Ignored if doMatchBackgrounds false. " \
+        doc = "Automatically select the coadd temp exposure to use as a reference for background matching? "
+              "Ignored if doMatchBackgrounds false. "
               "If False you must specify the reference temp exposure as the data Id",
         dtype = bool,
         default = True,
@@ -118,12 +119,12 @@ class AssembleCoaddConfig(CoaddBaseTask.ConfigClass):
                "would have contributed exceeds this value."),
         default = {"SAT": 0.1},
     )
-    removeMaskPlanes = pexConfig.ListField(dtype=str, default=["CROSSTALK", "NOT_DEBLENDED"],\
-                                 doc="Mask planes to remove before coadding")
+    removeMaskPlanes = pexConfig.ListField(dtype=str, default=["CROSSTALK", "NOT_DEBLENDED"],
+                                           doc="Mask planes to remove before coadding")
     #
     # N.b. These configuration options only set the bitplane config.brightObjectMaskName
     # To make this useful you *must* also configure the flags.pixel algorithm, for example
-    # by adding 
+    # by adding
     #   config.measurement.plugins["base_PixelFlags"].masksFpCenter.append("BRIGHT_OBJECT")
     #   config.measurement.plugins["base_PixelFlags"].masksFpAnywhere.append("BRIGHT_OBJECT")
     # to your measureCoaddSources.py config overrides
@@ -135,7 +136,7 @@ class AssembleCoaddConfig(CoaddBaseTask.ConfigClass):
 
     def setDefaults(self):
         CoaddBaseTask.ConfigClass.setDefaults(self)
-        self.badMaskPlanes = ["NO_DATA", "BAD", "CR",]
+        self.badMaskPlanes = ["NO_DATA", "BAD", "CR", ]
 
 
 class AssembleCoaddTask(CoaddBaseTask):
@@ -267,7 +268,7 @@ class AssembleCoaddTask(CoaddBaseTask):
         refImageScaler = self.scaleZeroPoint.computeImageScaler(
             exposure = refExposure,
             dataRef = dataRef,
-            )
+        )
         return refImageScaler
 
     def prepareInputs(self, refList):
@@ -312,8 +313,8 @@ class AssembleCoaddTask(CoaddBaseTask):
                 self.log.warn("Scaling failed for %s (skipping it): %s" % (tempExpRef.dataId, e))
                 continue
             statObj = afwMath.makeStatistics(maskedImage.getVariance(), maskedImage.getMask(),
-                afwMath.MEANCLIP, statsCtrl)
-            meanVar, meanVarErr = statObj.getResult(afwMath.MEANCLIP);
+                                             afwMath.MEANCLIP, statsCtrl)
+            meanVar, meanVarErr = statObj.getResult(afwMath.MEANCLIP)
             weight = 1.0 / float(meanVar)
             if not numpy.isfinite(weight):
                 self.log.warn("Non-finite weight for %s: skipping" % (tempExpRef.dataId,))
@@ -329,7 +330,6 @@ class AssembleCoaddTask(CoaddBaseTask):
 
         return pipeBase.Struct(tempExpRefList=tempExpRefList, weightList=weightList,
                                imageScalerList=imageScalerList)
-
 
     def backgroundMatching(self, inputData, refExpDataRef=None, refImageScaler=None):
         """Perform background matching on the prepared inputs
@@ -375,7 +375,7 @@ class AssembleCoaddTask(CoaddBaseTask):
                         tempExpRef.dataId))
                     continue
                 try:
-                    varianceRatio =  bgInfo.matchedMSE / bgInfo.diffImVar
+                    varianceRatio = bgInfo.matchedMSE / bgInfo.diffImVar
                 except Exception as e:
                     self.log.info("MSE/Var ratio not calculable (%s) for %s: skipping" %
                                   (e, tempExpRef.dataId,))
@@ -387,11 +387,11 @@ class AssembleCoaddTask(CoaddBaseTask):
                     continue
                 elif (varianceRatio > self.config.maxMatchResidualRatio):
                     self.log.info("Bad fit. MSE/Var ratio %.2f > %.2f for %s: skipping" % (
-                            varianceRatio, self.config.maxMatchResidualRatio, tempExpRef.dataId,))
+                        varianceRatio, self.config.maxMatchResidualRatio, tempExpRef.dataId,))
                     continue
-                elif ( bgInfo.fitRMS > self.config.maxMatchResidualRMS):
+                elif (bgInfo.fitRMS > self.config.maxMatchResidualRMS):
                     self.log.info("Bad fit. RMS %.2f > %.2f for %s: skipping" % (
-                            bgInfo.fitRMS, self.config.maxMatchResidualRMS, tempExpRef.dataId,))
+                        bgInfo.fitRMS, self.config.maxMatchResidualRMS, tempExpRef.dataId,))
                     continue
             newWeightList.append(1 / (1 / weight + bgInfo.fitRMS**2))
             newTempExpRefList.append(tempExpRef)
@@ -401,7 +401,7 @@ class AssembleCoaddTask(CoaddBaseTask):
         return pipeBase.Struct(tempExpRefList=newTempExpRefList, weightList=newWeightList,
                                imageScalerList=newScaleList, backgroundInfoList=newBackgroundStructList)
 
-    def assemble(self, skyInfo, tempExpRefList, imageScalerList, weightList, bgInfoList=None, 
+    def assemble(self, skyInfo, tempExpRefList, imageScalerList, weightList, bgInfoList=None,
                  altMaskList=None, doClip=False, mask=None):
         """Assemble a coadd from input warps
 
@@ -479,7 +479,7 @@ class AssembleCoaddTask(CoaddBaseTask):
         # (and we need more than just the PropertySet that contains the header), which is not possible
         # with the current butler (see #2777).
         tempExpList = [tempExpRef.get(tempExpName + "_sub",
-                                      bbox=afwGeom.Box2I(afwGeom.Point2I(0,0), afwGeom.Extent2I(1,1)),
+                                      bbox=afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(1, 1)),
                                       imageOrigin="LOCAL", immediate=True) for tempExpRef in tempExpRefList]
         numCcds = sum(len(tempExp.getInfo().getCoaddInputs().ccds) for tempExp in tempExpList)
 
@@ -517,7 +517,7 @@ class AssembleCoaddTask(CoaddBaseTask):
         self.log.logdebug("Computing coadd over %s" % bbox)
         tempExpName = self.getTempExpDatasetName()
         coaddMaskedImage = coaddExposure.getMaskedImage()
-        maskedImageList = afwImage.vectorMaskedImageF() # [] is rejected by afwMath.statisticsStack
+        maskedImageList = afwImage.vectorMaskedImageF()  # [] is rejected by afwMath.statisticsStack
         for tempExpRef, imageScaler, bgInfo, altMask in zip(tempExpRefList, imageScalerList, bgInfoList,
                                                             altMaskList):
             exposure = tempExpRef.get(tempExpName + "_sub", bbox=bbox)
@@ -554,7 +554,6 @@ class AssembleCoaddTask(CoaddBaseTask):
 
         coaddMaskedImage.assign(coaddSubregion, bbox)
 
-
     def addBackgroundMatchingMetadata(self, coaddExposure, tempExpRefList, backgroundInfoList):
         """Add metadata from the background matching to the coadd
 
@@ -566,7 +565,7 @@ class AssembleCoaddTask(CoaddBaseTask):
         metadata.addString("CTExp_SDQA1_DESCRIPTION",
                            "Background matching: Ratio of matchedMSE / diffImVar")
         for ind, (tempExpRef, backgroundInfo) in enumerate(zip(tempExpRefList, backgroundInfoList)):
-            tempExpStr = '&'.join('%s=%s' % (k,v) for k,v in tempExpRef.dataId.items())
+            tempExpStr = '&'.join('%s=%s' % (k, v) for k, v in tempExpRef.dataId.items())
             if backgroundInfo.isReference:
                 metadata.addString("ReferenceExp_ID", tempExpStr)
             else:
@@ -630,7 +629,6 @@ class AssembleCoaddTask(CoaddBaseTask):
         return parser
 
 
-
 def _subBBoxIter(bbox, subregionSize):
     """Iterate over subregions of a bbox
 
@@ -651,15 +649,15 @@ def _subBBoxIter(bbox, subregionSize):
             subBBox = afwGeom.Box2I(bbox.getMin() + afwGeom.Extent2I(colShift, rowShift), subregionSize)
             subBBox.clip(bbox)
             if subBBox.isEmpty():
-                raise RuntimeError("Bug: empty bbox! bbox=%s, subregionSize=%s, colShift=%s, rowShift=%s" % \
-                    (bbox, subregionSize, colShift, rowShift))
+                raise RuntimeError("Bug: empty bbox! bbox=%s, subregionSize=%s, colShift=%s, rowShift=%s" %
+                                   (bbox, subregionSize, colShift, rowShift))
             yield subBBox
-
 
 
 class AssembleCoaddDataIdContainer(pipeBase.DataIdContainer):
     """A version of lsst.pipe.base.DataIdContainer specialized for assembleCoadd.
     """
+
     def makeDataRefList(self, namespace):
         """Make self.refList from self.idList.
 
@@ -675,13 +673,13 @@ class AssembleCoaddDataIdContainer(pipeBase.DataIdContainer):
                                                     level=self.level)
 
         if namespace.config.doMatchBackgrounds:
-            if namespace.config.autoReference: #matcher will pick it's own reference image
+            if namespace.config.autoReference:  # matcher will pick it's own reference image
                 datasetType = namespace.config.coaddName + "Coadd"
                 validKeys = keysCoadd
             else:
                 datasetType = namespace.config.coaddName + "Coadd_tempExp"
                 validKeys = keysCoaddTempExp
-        else: #bkg subtracted coadd
+        else:  # bkg subtracted coadd
             datasetType = namespace.config.coaddName + "Coadd"
             validKeys = keysCoadd
 
@@ -691,8 +689,8 @@ class AssembleCoaddDataIdContainer(pipeBase.DataIdContainer):
                 if key not in dataId:
                     raise RuntimeError("--id must include " + key)
 
-            for key in dataId: # check if users supplied visit/run
-                if (key not in keysCoadd) and (key in keysCoaddTempExp):  #user supplied a visit/run
+            for key in dataId:  # check if users supplied visit/run
+                if (key not in keysCoadd) and (key in keysCoaddTempExp):  # user supplied a visit/run
                     if namespace.config.autoReference:
                         # user probably meant: autoReference = False
                         namespace.config.autoReference = False
@@ -705,6 +703,7 @@ class AssembleCoaddDataIdContainer(pipeBase.DataIdContainer):
                 dataId = dataId,
             )
             self.refList.append(dataRef)
+
 
 def countMaskFromFootprint(mask, footprint, bitmask, ignoreMask):
     """Function to count the number of pixels with a specific mask in a footprint
@@ -720,32 +719,32 @@ def countMaskFromFootprint(mask, footprint, bitmask, ignoreMask):
 
 class SafeClipAssembleCoaddConfig(AssembleCoaddConfig):
     clipDetection = pexConfig.ConfigurableField(target=SourceDetectionTask,
-                                      doc="Detect sources on difference between unclipped and clipped coadd")
+                                                doc="Detect sources on difference between unclipped and clipped coadd")
     minClipFootOverlap = pexConfig.Field(
         doc = "Minimum fractional overlap of clipped footprint with visit DETECTED to be clipped",
         dtype = float,
         default = 0.65
     )
     minClipFootOverlapSingle = pexConfig.Field(
-        doc = "Minimum fractional overlap of clipped footprint with visit DETECTED to be " \
+        doc = "Minimum fractional overlap of clipped footprint with visit DETECTED to be "
               "clipped when only one visit overlaps",
         dtype = float,
         default = 0.5
     )
     minClipFootOverlapDouble = pexConfig.Field(
-        doc = "Minimum fractional overlap of clipped footprints with visit DETECTED to be " \
+        doc = "Minimum fractional overlap of clipped footprints with visit DETECTED to be "
               "clipped when two visits overlap",
         dtype = float,
         default = 0.45
     )
     maxClipFootOverlapDouble = pexConfig.Field(
-        doc = "Maximum fractional overlap of clipped footprints with visit DETECTED when " \
+        doc = "Maximum fractional overlap of clipped footprints with visit DETECTED when "
               "considering two visits",
         dtype = float,
         default = 0.15
     )
     minBigOverlap = pexConfig.Field(
-        doc = "Minimum number of pixels in footprint to use DETECTED mask from the single visits " \
+        doc = "Minimum number of pixels in footprint to use DETECTED mask from the single visits "
               "when labeling clipped footprints",
         dtype = int,
         default = 100
@@ -798,7 +797,7 @@ class SafeClipAssembleCoaddTask(AssembleCoaddTask):
 
         Identify clipped regions by detecting objects on the difference between unclipped and clipped coadd
         and then flag these regions on the individual visits so they are ignored in the coaddition process.
-        
+
         N.b. *args and **kwargs are passed but ignored in order to match the call signature expected by the
         parent task.
 
@@ -871,7 +870,6 @@ class SafeClipAssembleCoaddTask(AssembleCoaddTask):
         exp.setPsf(coaddMean.getPsf())
         return exp
 
-
     def detectClip(self, exp, tempExpRefList):
         """Detect clipped regions on an exposure and set the mask on the individual tempExp masks
 
@@ -897,13 +895,13 @@ class SafeClipAssembleCoaddTask(AssembleCoaddTask):
 
         # build a list with a mask for each visit which can be modified with clipping information
         tempExpClipList = [tmpExpRef.get(self.getTempExpDatasetName(),
-                           immediate=True).getMaskedImage().getMask() for tmpExpRef in tempExpRefList]
+                                         immediate=True).getMaskedImage().getMask() for tmpExpRef in tempExpRefList]
 
         for footprint in footprints.getFootprints():
             nPixel = footprint.getArea()
-            overlap = [] # hold the overlap with each visit
-            maskList = [] # which visit mask match
-            indexList = []# index of visit in global list
+            overlap = []  # hold the overlap with each visit
+            maskList = []  # which visit mask match
+            indexList = []  # index of visit in global list
             for i, tmpExpMask in enumerate(tempExpClipList):
                 # Determine the overlap with the footprint
                 ignore = countMaskFromFootprint(tmpExpMask, footprint, ignoreMask, 0x0)
@@ -922,7 +920,7 @@ class SafeClipAssembleCoaddTask(AssembleCoaddTask):
                 continue
 
             keep = False   # Should this footprint be marked as clipped?
-            keepIndex = [] # Which tempExps does the clipped footprint belong to
+            keepIndex = []  # Which tempExps does the clipped footprint belong to
 
             # If footprint only has one overlap use a lower threshold
             if len(overlap) == 1:
@@ -933,7 +931,7 @@ class SafeClipAssembleCoaddTask(AssembleCoaddTask):
                 # This is the general case where only visit should be clipped
                 clipIndex = numpy.where(overlap > self.config.minClipFootOverlap)[0]
                 if len(clipIndex) == 1:
-                    keep=True
+                    keep = True
                     keepIndex = [clipIndex[0]]
 
                 # Test if there are clipped objects that overlap two different visits
@@ -941,7 +939,7 @@ class SafeClipAssembleCoaddTask(AssembleCoaddTask):
                 if len(clipIndex) == 2 and len(overlap) > 3:
                     clipIndexComp = numpy.where(overlap < self.config.minClipFootOverlapDouble)[0]
                     if numpy.max(overlap[clipIndexComp]) < self.config.maxClipFootOverlapDouble:
-                        keep=True
+                        keep = True
                         keepIndex = clipIndex
 
             if not keep:
@@ -955,7 +953,6 @@ class SafeClipAssembleCoaddTask(AssembleCoaddTask):
 
         return pipeBase.Struct(clipFootprints=clipFootprints, clipIndices=clipIndices,
                                tempExpClipList=tempExpClipList)
-
 
     def detectClipBig(self, tempExpClipList, clipFootprints, clipIndices, maskClipValue, maskDetValue):
         """Find footprints from individual tempExp footprints for large footprints

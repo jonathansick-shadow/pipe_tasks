@@ -27,6 +27,7 @@ from .characterizeImage import CharacterizeImageTask
 
 __all__ = ["ProcessCcdConfig", "ProcessCcdTask"]
 
+
 class ProcessCcdConfig(pexConfig.Config):
     """Config for ProcessCcd"""
     isr = pexConfig.ConfigurableField(
@@ -62,18 +63,18 @@ class ProcessCcdConfig(pexConfig.Config):
     )
 
 
-## \addtogroup LSST_task_documentation
-## \{
-## \page ProcessCcdTask
-## \ref ProcessCcdTask_ "ProcessCcdTask"
-## \copybrief ProcessCcdTask
-## \}
+# \addtogroup LSST_task_documentation
+# \{
+# \page ProcessCcdTask
+# \ref ProcessCcdTask_ "ProcessCcdTask"
+# \copybrief ProcessCcdTask
+# \}
 
 class ProcessCcdTask(pipeBase.CmdLineTask):
     """!Assemble raw data, fit the PSF, detect and measure, and fit WCS and zero-point
 
     @anchor ProcessCcdTask_
-    
+
     @section pipe_tasks_processCcd_Contents  Contents
 
      - @ref pipe_tasks_processCcd_Purpose
@@ -190,7 +191,7 @@ class ProcessCcdTask(pipeBase.CmdLineTask):
         """
         parser = pipeBase.ArgumentParser(name=cls._DefaultName)
         parser.add_id_argument(name="--id",
-            datasetType=pipeBase.ConfigDatasetType(name="isr.datasetType"),
-            help="data IDs, e.g. --id visit=12345 ccd=1,2^0,3")
+                               datasetType=pipeBase.ConfigDatasetType(name="isr.datasetType"),
+                               help="data IDs, e.g. --id visit=12345 ccd=1,2^0,3")
         return parser
 

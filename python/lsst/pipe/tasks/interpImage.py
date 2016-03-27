@@ -27,6 +27,7 @@ import lsst.ip.isr as ipIsr
 
 __all__ = ["InterpImageConfig", "InterpImageTask"]
 
+
 class InterpImageConfig(pexConfig.Config):
     """Config for InterpImageTask
     """
@@ -45,7 +46,7 @@ class InterpImageConfig(pexConfig.Config):
             "MEDIAN": "median",
             "MEANCLIP": "clipped mean",
             "USER": "user value set in fallbackUserValue config",
-            },
+        },
         default = "MEDIAN",
     )
     fallbackUserValue = pexConfig.Field(
@@ -64,9 +65,10 @@ class InterpImageConfig(pexConfig.Config):
         pexConfig.Config.validate(self)
         if self.useFallbackValueAtEdge:
             if (not self.negativeFallbackAllowed and self.fallbackValueType == "USER" and
-                self.fallbackUserValue < 0.0):
+                    self.fallbackUserValue < 0.0):
                 raise ValueError("User supplied fallbackValue is negative (%.2f) but "
                                  "negativeFallbackAllowed is False" % self.fallbackUserValue)
+
 
 class InterpImageTask(pipeBase.Task):
     """Interpolate over bad image pixels

@@ -27,6 +27,7 @@ import lsst.pex.config as pexConfig
 import lsst.pipe.base as pipeBase
 from lsst.skymap import skyMapRegistry
 
+
 class MakeSkyMapConfig(pexConfig.Config):
     """Config for MakeSkyMapTask
     """
@@ -40,8 +41,8 @@ class MakeSkyMapConfig(pexConfig.Config):
         default = "dodeca",
     )
     doWrite = pexConfig.Field(
-        doc = "persist the skyMap? If False then run generates the sky map and returns it, " \
-            + "but does not save it to the data repository",
+        doc = "persist the skyMap? If False then run generates the sky map and returns it, "
+        + "but does not save it to the data repository",
         dtype = bool,
         default = True,
     )
@@ -74,6 +75,7 @@ class MakeSkyMapRunner(pipeBase.TaskRunner):
         task.writeMetadata(butler)
         if self.doReturnResults:
             return results
+
 
 class MakeSkyMapTask(pipeBase.CmdLineTask):
     """!Make a sky map in a repository
@@ -121,9 +123,9 @@ class MakeSkyMapTask(pipeBase.CmdLineTask):
             )
             skyPosList = [wcs.pixelToSky(pos).getPosition(afwGeom.degrees) for pos in pixelPosList]
             posStrList = ["(%0.3f, %0.3f)" % tuple(skyPos) for skyPos in skyPosList]
-            self.log.info("tract %s has corners %s (RA, Dec deg) and %s x %s patches" % \
-                (tractInfo.getId(), ", ".join(posStrList), \
-                tractInfo.getNumPatches()[0], tractInfo.getNumPatches()[1]))
+            self.log.info("tract %s has corners %s (RA, Dec deg) and %s x %s patches" %
+                          (tractInfo.getId(), ", ".join(posStrList),
+                           tractInfo.getNumPatches()[0], tractInfo.getNumPatches()[1]))
 
     @classmethod
     def _makeArgumentParser(cls):

@@ -31,7 +31,8 @@ import lsst.pipe.base as pipeBase
 from lsst.pipe.tasks.makeSkyMap import MakeSkyMapTask
 from lsst.pipe.tasks.selectImages import WcsSelectImagesTask
 
-__all__ = ["ReportImagesInPatchTask",]
+__all__ = ["ReportImagesInPatchTask", ]
+
 
 class ReportImagesInPatchConfig(pexConfig.Config):
     """Config for ReportImagesInPatchTask
@@ -52,7 +53,7 @@ class ReportImagesInPatchTask(pipeBase.CmdLineTask):
     """
     ConfigClass = ReportImagesInPatchConfig
     _DefaultName = "reportImagesInPatch"
-    
+
     def __init__(self, *args, **kwargs):
         pipeBase.CmdLineTask.__init__(self, *args, **kwargs)
         self.makeSubtask("select")
@@ -60,9 +61,9 @@ class ReportImagesInPatchTask(pipeBase.CmdLineTask):
     @pipeBase.timeMethod
     def run(self, patchRef):
         """Select images for a region and report how many are in each tract and patch
-        
+
         Also report quartiles of FWHM 
-    
+
         @param patchRef: data reference for coadd patch.
         @return: a pipeBase.Struct with fields:
         - exposureInfoList: a list of exposure info objects, as returned by the select subtask
@@ -87,11 +88,11 @@ class ReportImagesInPatchTask(pipeBase.CmdLineTask):
             coordList = coordList,
             makeDataRefList = False,
         ).exposureInfoList
-        
+
         print "Found %d suitable exposures" % (len(exposureInfoList),)
         if len(exposureInfoList) < 1:
             return
-        
+
         fwhmList = [exposureInfo.fwhm for exposureInfo in exposureInfoList]
         fwhmList = numpy.array(fwhmList, dtype=float)
         print "FWHM Q1=%0.2f Q2=%0.2f Q3=%0.2f" % (
@@ -99,7 +100,7 @@ class ReportImagesInPatchTask(pipeBase.CmdLineTask):
             numpy.percentile(fwhmList, 50.0),
             numpy.percentile(fwhmList, 75.0),
         )
-        
+
         print "Image IDs:"
         if len(exposureInfoList) > 0:
             idKeys = sorted(exposureInfoList[0].dataId.keys())
@@ -109,7 +110,7 @@ class ReportImagesInPatchTask(pipeBase.CmdLineTask):
                 skyPosStrList = ["(%0.3f, %0.3f)" % tuple(skyPos) for skyPos in skyPosList]
                 skyPosStr = ", ".join(skyPosStrList)
                 print "dataId=%s; corner RA/Dec (deg)=%s" % (idStr, skyPosStr)
-        
+
         return pipeBase.Struct(
             exposureInfoList = exposureInfoList,
         )
@@ -117,7 +118,7 @@ class ReportImagesInPatchTask(pipeBase.CmdLineTask):
     @classmethod
     def _makeArgumentParser(cls):
         """Create an argument parser
-        
+
         Use datasetType="deepCoadd" to get the right keys (even chi-squared coadds
         need filter information for this particular task).
         """
@@ -130,18 +131,19 @@ class ReportImagesInPatchTask(pipeBase.CmdLineTask):
         """Don't persist config, so return None
         """
         return None
-    
+
     def _getMetadataName(self):
         """Don't persist metadata, so return None
         """
         return None
-    
+
 
 class ReportImagesInPatchDataIdContainer(pipeBase.DataIdContainer):
     """A version of lsst.pipe.base.DataIdContainer specialized for reporting images.
-    
+
     Required because butler.subset cannot handle this dataset type.
     """
+
     def makeDataRefList(self, namespace):
         """Make self.refList from self.idList"""
         datasetType = namespace.config.coaddName + "Coadd"
@@ -157,7 +159,7 @@ class ReportImagesInPatchDataIdContainer(pipeBase.DataIdContainer):
 def _getBox2DCorners(bbox):
     """Return the four corners of a bounding box (Box2I or Box2D) as four afwGeom Point2D
     """
-    bbox = afwGeom.Box2D(bbox) # mak
+    bbox = afwGeom.Box2D(bbox)  # mak
     return (
         bbox.getMin(),
         afwGeom.Point2D(bbox.getMaxX(), bbox.getMinY()),

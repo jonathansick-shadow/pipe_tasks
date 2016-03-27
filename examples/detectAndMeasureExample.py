@@ -29,7 +29,7 @@ import numpy as np
 
 import lsst.utils
 from lsst.daf.butlerUtils import ExposureIdInfo
-from lsst.afw.detection import GaussianPsf    
+from lsst.afw.detection import GaussianPsf
 import lsst.afw.image as afwImage
 from lsst.meas.astrom import displayAstrometry
 from lsst.meas.algorithms import estimateBackground
@@ -39,6 +39,7 @@ from lsst.pipe.tasks.repair import RepairTask
 np.random.seed(1)
 
 FilterName = "r"
+
 
 def loadData(psfSigma=1.5):
     """Prepare the data we need to run the example"""
@@ -101,7 +102,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Demonstrate the use of DetectAndMeasureTask")
 
     parser.add_argument('--display', action="store_true",
-        help="Display the output image and source catalog", default=False)
+                        help="Display the output image and source catalog", default=False)
 
     args = parser.parse_args()
 

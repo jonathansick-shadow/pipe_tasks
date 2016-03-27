@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 from __future__ import absolute_import, division
-# 
+#
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
-# 
+#
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
 #
@@ -11,14 +11,14 @@ from __future__ import absolute_import, division
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
-# You should have received a copy of the LSST License Statement and 
-# the GNU General Public License along with this program.  If not, 
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
@@ -28,15 +28,15 @@ import numpy as np
 
 import lsst.utils
 import sys
-import lsst.afw.table              as afwTable
-import lsst.afw.image              as afwImage
+import lsst.afw.table as afwTable
+import lsst.afw.image as afwImage
 from lsst.meas.astrom import AstrometryTask
 from lsst.pipe.tasks.photoCal import PhotoCalTask
 
 
 def loadData():
     """Prepare the data we need to run the example"""
-    
+
     # Load sample input from disk
     mypath = lsst.utils.getPackageDir('meas_astrom')
 
@@ -47,14 +47,15 @@ def loadData():
     # meas_astrom; it needs to be called as
     #        astrom.determineWcs(srcCat, exposure, imageSize=(2048, 4612))
     #
-    # Rather than fixing this we'll fix the input image 
+    # Rather than fixing this we'll fix the input image
     #
     if True:
         smi = exposure.getMaskedImage()
         mi = smi.Factory(2048, 4612)
         mi[0:smi.getWidth(), 0:smi.getHeight()] = smi
         exposure.setMaskedImage(mi)
-        del mi; del smi
+        del mi
+        del smi
 
     # Set up local astrometry_net_data
     datapath = os.path.join(mypath, 'tests', 'astrometry_net_data', 'photocal')
@@ -71,6 +72,7 @@ def loadData():
 
     return exposure, srcCat
 
+
 def run():
     exposure, srcCat = loadData()
     schema = srcCat.getSchema()
@@ -79,7 +81,7 @@ def run():
     #
     config = AstrometryTask.ConfigClass()
     config.refObjLoader.filterMap = {"_unknown_": "r"}
-    config.matcher.sourceFluxType = "Psf" # sample catalog does not contain aperture flux
+    config.matcher.sourceFluxType = "Psf"  # sample catalog does not contain aperture flux
     aTask = AstrometryTask(config=config)
     #
     # And the photometry Task
@@ -107,7 +109,8 @@ def run():
 
         cat.extend(srcCat, True, scm)   # copy srcCat to cat, adding new columns
 
-        srcCat = cat; del cat
+        srcCat = cat
+        del cat
     #
     # Process the data
     #
@@ -118,12 +121,12 @@ def run():
     fm0, fm0Err = calib.getFluxMag0()
 
     print("Used %d calibration sources out of %d matches" % (len(result.matches), len(matches)))
-    
+
     delta = result.arrays.refMag - result.arrays.srcMag
     q25, q75 = np.percentile(delta, [25, 75])
     print("RMS error is %.3fmmsg (robust %.3f, Calib says %.3f)" % (np.std(delta), 0.741*(q75 - q25),
                                                                     2.5/np.log(10)*fm0Err/fm0))
-            
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 if __name__ == "__main__":

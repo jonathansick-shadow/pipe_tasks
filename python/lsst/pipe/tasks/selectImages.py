@@ -26,6 +26,7 @@ import lsst.pipe.base as pipeBase
 
 __all__ = ["BaseSelectImagesTask", "BaseExposureInfo", "WcsSelectImagesTask", "DatabaseSelectImagesConfig"]
 
+
 class DatabaseSelectImagesConfig(pexConfig.Config):
     """Base configuration for subclasses of BaseSelectImagesTask that use a database"""
     host = pexConfig.Field(
@@ -46,9 +47,11 @@ class DatabaseSelectImagesConfig(pexConfig.Config):
         optional = True,
     )
 
+
 class BaseExposureInfo(pipeBase.Struct):
     """Data about a selected exposure
     """
+
     def __init__(self, dataId, coordList):
         """Create exposure information that can be used to generate data references
 
@@ -65,14 +68,14 @@ class BaseSelectImagesTask(pipeBase.Task):
     """
     ConfigClass = pexConfig.Config
     _DefaultName = "selectImages"
-    
+
     @pipeBase.timeMethod
     def run(self, coordList):
         """Select images suitable for coaddition in a particular region
-        
+
         @param[in] coordList: list of coordinates defining region of interest; if None then select all images
         subclasses may add additional keyword arguments, as required
-        
+
         @return a pipeBase Struct containing:
         - exposureInfoList: a list of exposure information objects (subclasses of BaseExposureInfo),
             which have at least the following fields:
@@ -80,14 +83,14 @@ class BaseSelectImagesTask(pipeBase.Task):
             - coordList: coordinates of the corner of the exposure (list of afwCoord.IcrsCoord)
         """
         raise NotImplementedError()
-    
+
     def _runArgDictFromDataId(self, dataId):
         """Extract keyword arguments for run (other than coordList) from a data ID
-        
+
         @return keyword arguments for run (other than coordList), as a dict
         """
         raise NotImplementedError()
-    
+
     def runDataRef(self, dataRef, coordList, makeDataRefList=True, selectDataList=[]):
         """Run based on a data reference
 
@@ -156,12 +159,14 @@ def _extractKeyValue(dataList, keys=None):
 
 class SelectStruct(pipeBase.Struct):
     """A container for data to be passed to the WcsSelectImagesTask"""
+
     def __init__(self, dataRef, wcs, dims):
         super(SelectStruct, self).__init__(dataRef=dataRef, wcs=wcs, dims=dims)
 
 
 class WcsSelectImagesTask(BaseSelectImagesTask):
     """Select images using their Wcs"""
+
     def runDataRef(self, dataRef, coordList, makeDataRefList=True, selectDataList=[]):
         """Select images in the selectDataList that overlap the patch
 
@@ -190,9 +195,9 @@ class WcsSelectImagesTask(BaseSelectImagesTask):
         for data in selectDataList:
             dataRef = data.dataRef
             imageWcs = data.wcs
-            nx,ny = data.dims
+            nx, ny = data.dims
 
-            imageBox = afwGeom.Box2D(afwGeom.Point2D(0,0), afwGeom.Extent2D(nx, ny))
+            imageBox = afwGeom.Box2D(afwGeom.Point2D(0, 0), afwGeom.Extent2D(nx, ny))
             try:
                 imageCorners = [imageWcs.pixelToSky(pix) for pix in imageBox.getCorners()]
             except (pexExceptions.DomainError, pexExceptions.RuntimeError) as e:
@@ -201,7 +206,7 @@ class WcsSelectImagesTask(BaseSelectImagesTask):
                 continue
 
             imagePoly = convexHull([coord.getVector() for coord in imageCorners])
-            if patchPoly.intersects(imagePoly): # "intersects" also covers "contains" or "is contained by"
+            if patchPoly.intersects(imagePoly):  # "intersects" also covers "contains" or "is contained by"
                 self.log.info("Selecting calexp %s" % dataRef.dataId)
                 dataRefList.append(dataRef)
                 exposureInfoList.append(BaseExposureInfo(dataRef.dataId, imageCorners))

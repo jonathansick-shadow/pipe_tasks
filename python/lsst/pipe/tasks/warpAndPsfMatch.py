@@ -26,6 +26,7 @@ from lsst.ip.diffim import ModelPsfMatchTask
 
 __all__ = ["WarpAndPsfMatchTask"]
 
+
 class WarpAndPsfMatchConfig(pexConfig.Config):
     """Config for WarpAndPsfMatchTask
     """
@@ -67,7 +68,7 @@ class WarpAndPsfMatchTask(pipeBase.Task):
             ignored if destBBox is not None
         @param destBBox: exact parent bbox of warped exposure (an afwGeom.Box2I or None);
             if None then maxBBox is used to determine the bbox, otherwise maxBBox is ignored
-        
+
         @return a pipe_base Struct containing:
         - exposure: processed exposure
         """

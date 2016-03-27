@@ -1,7 +1,7 @@
-# 
+#
 # LSST Data Management System
 # Copyright 2008-2016 AURA/LSST.
-# 
+#
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
 #
@@ -9,14 +9,14 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
-# You should have received a copy of the LSST License Statement and 
-# the GNU General Public License along with this program.  If not, 
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 import numpy as num
@@ -34,6 +34,7 @@ from lsst.meas.base import SingleFrameMeasurementTask
 import lsst.meas.algorithms as measAlg
 
 from .repair import RepairTask
+
 
 class InitialPsfConfig(pexConfig.Config):
     """!Describes the initial PSF used for detection and measurement before we do PSF determination."""
@@ -63,6 +64,7 @@ class InitialPsfConfig(pexConfig.Config):
         default = 15,
     )
 
+
 class SnapCombineConfig(pexConfig.Config):
     doRepair = pexConfig.Field(
         dtype = bool,
@@ -71,7 +73,7 @@ class SnapCombineConfig(pexConfig.Config):
     )
     repairPsfFwhm = pexConfig.Field(
         dtype = float,
-        doc = "Psf FWHM (pixels) used to detect CRs", 
+        doc = "Psf FWHM (pixels) used to detect CRs",
         default = 2.5,
     )
     doDiffIm = pexConfig.Field(
@@ -92,27 +94,27 @@ class SnapCombineConfig(pexConfig.Config):
     badMaskPlanes = pexConfig.ListField(
         dtype = str,
         doc = "Mask planes that, if set, the associated pixels are not included in the combined exposure; "
-            "DETECTED excludes cosmic rays",
+        "DETECTED excludes cosmic rays",
         default = ("DETECTED",),
     )
     averageKeys = pexConfig.ListField(
         dtype = str,
         doc = "List of float metadata keys to average when combining snaps, e.g. float positions and dates; "
-            "non-float data must be handled by overriding the fixMetadata method",
+        "non-float data must be handled by overriding the fixMetadata method",
         optional = True,
-        
+
     )
     sumKeys = pexConfig.ListField(
         dtype = str,
         doc = "List of float or int metadata keys to sum when combining snaps, e.g. exposure time; "
-            "non-float, non-int data must be handled by overriding the fixMetadata method",
+        "non-float, non-int data must be handled by overriding the fixMetadata method",
         optional = True,
     )
 
-    repair      = pexConfig.ConfigurableField(target = RepairTask, doc = "")
-    diffim      = pexConfig.ConfigurableField(target = SnapPsfMatchTask, doc = "")
-    detection   = pexConfig.ConfigurableField(target = SourceDetectionTask, doc = "")
-    initialPsf  = pexConfig.ConfigField(dtype = InitialPsfConfig, doc = "")
+    repair = pexConfig.ConfigurableField(target = RepairTask, doc = "")
+    diffim = pexConfig.ConfigurableField(target = SnapPsfMatchTask, doc = "")
+    detection = pexConfig.ConfigurableField(target = SourceDetectionTask, doc = "")
+    initialPsf = pexConfig.ConfigField(dtype = InitialPsfConfig, doc = "")
     measurement = pexConfig.ConfigurableField(target = SingleFrameMeasurementTask, doc = "")
 
     def setDefaults(self):
@@ -122,12 +124,13 @@ class SnapCombineConfig(pexConfig.Config):
         if self.detection.thresholdPolarity != "both":
             raise ValueError("detection.thresholdPolarity must be 'both' for SnapCombineTask")
 
-## \addtogroup LSST_task_documentation
-## \{
-## \page SnapCombineTask
-## \ref SnapCombineTask_ "SnapCombineTask"
-## \copybrief SnapCombineTask
-## \}
+# \addtogroup LSST_task_documentation
+# \{
+# \page SnapCombineTask
+# \ref SnapCombineTask_ "SnapCombineTask"
+# \copybrief SnapCombineTask
+# \}
+
 
 class SnapCombineTask(pipeBase.Task):
     """!
@@ -171,11 +174,11 @@ class SnapCombineTask(pipeBase.Task):
         self.makeSubtask("detection", schema=self.schema)
         if self.config.doMeasurement:
             self.makeSubtask("measurement", schema=self.schema, algMetadata=self.algMetadata)
- 
+
     @pipeBase.timeMethod
     def run(self, snap0, snap1, defects=None):
         """Combine two snaps
-        
+
         @param[in] snap0: snapshot exposure 0
         @param[in] snap1: snapshot exposure 1
         @defects[in] defect list (for repair task)
@@ -185,7 +188,7 @@ class SnapCombineTask(pipeBase.Task):
         """
         # initialize optional outputs
         sources = None
-        
+
         if self.config.doRepair:
             self.log.info("snapCombine repair")
             psf = self.makeInitialPsf(snap0, fwhmPix=self.config.repairPsfFwhm)
@@ -204,8 +207,8 @@ class SnapCombineTask(pipeBase.Task):
         if self.config.doDiffIm:
             if self.config.doPsfMatch:
                 self.log.info("snapCombine psfMatch")
-                diffRet  = self.diffim.run(snap0, snap1, "subtractExposures")
-                diffExp  = diffRet.subtractedImage
+                diffRet = self.diffim.run(snap0, snap1, "subtractExposures")
+                diffExp = diffRet.subtractedImage
 
                 # Measure centroid and width of kernel; dependent on ticket #1980
                 # Useful diagnostic for the degree of astrometric shift between snaps.
@@ -215,9 +218,9 @@ class SnapCombineTask(pipeBase.Task):
                 #psfAttr = measAlg.PsfAttributes(diffKern, width//2, height//2)
 
             else:
-                diffExp  = afwImage.ExposureF(snap0, True)
-                diffMi   = diffExp.getMaskedImage()
-                diffMi  -= snap1.getMaskedImage()
+                diffExp = afwImage.ExposureF(snap0, True)
+                diffMi = diffExp.getMaskedImage()
+                diffMi -= snap1.getMaskedImage()
 
             psf = self.makeInitialPsf(snap0)
             diffExp.setPsf(psf)
@@ -228,36 +231,36 @@ class SnapCombineTask(pipeBase.Task):
             fpSets = detRet.fpSets
             if self.config.doMeasurement:
                 self.measurement.measure(diffExp, sources)
-        
+
             mask0 = snap0.getMaskedImage().getMask()
             mask1 = snap1.getMaskedImage().getMask()
             fpSets.positive.setMask(mask0, "DETECTED")
             fpSets.negative.setMask(mask1, "DETECTED")
-        
+
             maskD = diffExp.getMaskedImage().getMask()
             fpSets.positive.setMask(maskD, "DETECTED")
             fpSets.negative.setMask(maskD, "DETECTED_NEGATIVE")
-        
+
         combinedExp = self.addSnaps(snap0, snap1)
 
         return pipeBase.Struct(
             exposure = combinedExp,
             sources = sources,
         )
-    
+
     def addSnaps(self, snap0, snap1):
         """Add two snap exposures together, returning a new exposure
-        
+
         @param[in] snap0 snap exposure 0
         @param[in] snap1 snap exposure 1
         @return combined exposure
         """
         self.log.info("snapCombine addSnaps")
-        
+
         combinedExp = snap0.Factory(snap0, True)
         combinedMi = combinedExp.getMaskedImage()
         combinedMi.set(0)
-        
+
         weightMap = combinedMi.getImage().Factory(combinedMi.getBBox())
         weight = 1.0
         badPixelMask = afwImage.MaskU.getPlaneBitMask(self.config.badMaskPlanes)
@@ -266,32 +269,32 @@ class SnapCombineTask(pipeBase.Task):
 
         # pre-scaling the weight map instead of post-scaling the combinedMi saves a bit of time
         # because the weight map is a simple Image instead of a MaskedImage
-        weightMap *= 0.5 # so result is sum of both images, instead of average
+        weightMap *= 0.5  # so result is sum of both images, instead of average
         combinedMi /= weightMap
         setCoaddEdgeBits(combinedMi.getMask(), weightMap)
-        
+
         # note: none of the inputs has a valid Calib object, so that is not touched
         # Filter was already copied
-        
+
         combinedMetadata = combinedExp.getMetadata()
         metadata0 = snap0.getMetadata()
         metadata1 = snap1.getMetadata()
         self.fixMetadata(combinedMetadata, metadata0, metadata1)
-        
+
         return combinedExp
-    
+
     def fixMetadata(self, combinedMetadata, metadata0, metadata1):
         """Fix the metadata of the combined exposure (in place)
-        
+
         This implementation handles items specified by config.averageKeys and config.sumKeys,
         which have data type restrictions. To handle other data types (such as sexagesimal
         positions and ISO dates) you must supplement this method with your own code.
-        
+
         @param[in,out] combinedMetadata metadata of combined exposure;
             on input this is a deep copy of metadata0 (a PropertySet)
         @param[in] metadata0 metadata of snap0 (a PropertySet)
         @param[in] metadata1 metadata of snap1 (a PropertySet)
-        
+
         @note the inputs are presently PropertySets due to ticket #2542. However, in some sense
         they are just PropertyLists that are missing some methods. In particular: comments and order
         are preserved if you alter an existing value with set(key, value).
@@ -315,8 +318,8 @@ class SnapCombineTask(pipeBase.Task):
                 if doAvg:
                     combinedVal /= 2.0
             except Exception:
-                self.log.warn("Could not %s metadata %r: value %r and/or %r not numeric" % \
-                    (opStr, key, val0, val1))
+                self.log.warn("Could not %s metadata %r: value %r and/or %r not numeric" %
+                              (opStr, key, val0, val1))
                 continue
 
             combinedMetadata.set(key, combinedVal)
@@ -330,10 +333,10 @@ class SnapCombineTask(pipeBase.Task):
         assert exposure, "No exposure provided"
         wcs = exposure.getWcs()
         assert wcs, "No wcs in exposure"
-        
+
         if fwhmPix is None:
             fwhmPix = self.config.initialPsf.fwhm / wcs.pixelScale().asArcseconds()
-            
+
         size = self.config.initialPsf.size
         model = self.config.initialPsf.model
         self.log.info("installInitialPsf fwhm=%s pixels; size=%s pixels" % (fwhmPix, size))

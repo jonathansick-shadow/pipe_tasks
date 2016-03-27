@@ -40,9 +40,11 @@ from lsst.pipe.tasks.processCcd import ProcessCcdTask
 obsTestDir = lsst.utils.getPackageDir('obs_test')
 InputDir = os.path.join(obsTestDir, "data", "input")
 
-OutputName = None # specify a name (as a string) to save the output repository
+OutputName = None  # specify a name (as a string) to save the output repository
+
 
 class ProcessCcdTestCase(lsst.utils.tests.TestCase):
+
     def testProcessCcd(self):
         """test ProcessCcdTask
 
@@ -89,7 +91,7 @@ class ProcessCcdTestCase(lsst.utils.tests.TestCase):
                 result.exposure,
             )):
                 self.assertEqual(exposure.getBBox(),
-                    afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(1018, 2000)))
+                                 afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(1018, 2000)))
                 maskedImage = exposure.getMaskedImage()
                 maskArr = maskedImage.getMask().getArray()
                 numGoodPix = numpy.sum(maskArr == 0)
@@ -123,9 +125,9 @@ class ProcessCcdTestCase(lsst.utils.tests.TestCase):
                     self.assertEqual(len(src), 185)
                     self.assertEqual(numGoodPix, 1965540)
 
-                    self.assertAlmostEqual(imMean,     0.99578990765845121, places=7)
-                    self.assertAlmostEqual(imStdDev,  95.645409033639211, places=7)
-                    self.assertAlmostEqual(varMean,  131.16293718847217, places=7)
+                    self.assertAlmostEqual(imMean, 0.99578990765845121, places=7)
+                    self.assertAlmostEqual(imStdDev, 95.645409033639211, places=7)
+                    self.assertAlmostEqual(varMean, 131.16293718847217, places=7)
                     self.assertAlmostEqual(varStdDev, 64.806576059889963, places=7)
                     self.assertAlmostEqual(psfIxx, 2.8540775242108163, places=7)
                     self.assertAlmostEqual(psfIyy, 2.17386182921239, places=7)
@@ -160,6 +162,7 @@ def suite():
     suites += unittest.makeSuite(ProcessCcdTestCase)
     suites += unittest.makeSuite(lsst.utils.tests.MemoryTestCase)
     return unittest.TestSuite(suites)
+
 
 def run(shouldExit=False):
     lsst.utils.tests.run(suite(), shouldExit)

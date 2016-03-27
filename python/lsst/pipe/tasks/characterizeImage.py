@@ -35,13 +35,14 @@ from .repair import RepairTask
 
 __all__ = ["CharacterizeImageConfig", "CharacterizeImageTask"]
 
+
 class CharacterizeImageConfig(pexConfig.Config):
     """!Config for CharacterizeImageTask"""
     doMeasurePsf = pexConfig.Field(
         dtype = bool,
         default = True,
         doc = "Measure PSF? If False then keep the existing PSF model (which must exist) "
-            "and use that model for all operations."
+        "and use that model for all operations."
     )
     doWrite = pexConfig.Field(
         dtype = bool,
@@ -58,7 +59,7 @@ class CharacterizeImageConfig(pexConfig.Config):
         default = 2,
         min = 1,
         doc = "Number of iterations of detect sources, measure sources, estimate PSF. "
-            "If useSimplePsf='all_iter' then 2 should be plenty; otherwise more may be wanted.",
+        "If useSimplePsf='all_iter' then 2 should be plenty; otherwise more may be wanted.",
     )
     background = pexConfig.ConfigField(
         dtype = estimateBackground.ConfigClass,
@@ -72,8 +73,8 @@ class CharacterizeImageConfig(pexConfig.Config):
         dtype = bool,
         default = True,
         doc = "Replace the existing PSF model with a simplified version that has the same sigma "
-            "at the start of each PSF determination iteration? Doing so makes PSF determination "
-            "converge more robustly and quickly.",
+        "at the start of each PSF determination iteration? Doing so makes PSF determination "
+        "converge more robustly and quickly.",
     )
     installSimplePsf = pexConfig.ConfigurableField(
         target = InstallGaussianPsfTask,
@@ -82,8 +83,8 @@ class CharacterizeImageConfig(pexConfig.Config):
     astrometry = pexConfig.ConfigurableField(
         target = AstrometryTask,
         doc = "Task to load and match reference objects. Only used if measurePsf can use matches. "
-            "Warning: matching will only work well if the initial WCS is accurate enough "
-            "to give good matches (roughly: good to 3 arcsec across the CCD).",
+        "Warning: matching will only work well if the initial WCS is accurate enough "
+        "to give good matches (roughly: good to 3 arcsec across the CCD).",
     )
     measurePsf = pexConfig.ConfigurableField(
         target = MeasurePsfTask,
@@ -119,21 +120,22 @@ class CharacterizeImageConfig(pexConfig.Config):
     def validate(self):
         if self.detectAndMeasure.doMeasureApCorr and not self.measurePsf:
             raise RuntimeError("Must measure PSF to measure aperture correction, "
-                "because flags determined by PSF measurement are used to identify "
-                "sources used to measure aperture correction")
+                               "because flags determined by PSF measurement are used to identify "
+                               "sources used to measure aperture correction")
 
-## \addtogroup LSST_task_documentation
-## \{
-## \page CharacterizeImageTask
-## \ref CharacterizeImageTask_ "CharacterizeImageTask"
-## \copybrief CharacterizeImageTask
-## \}
+# \addtogroup LSST_task_documentation
+# \{
+# \page CharacterizeImageTask
+# \ref CharacterizeImageTask_ "CharacterizeImageTask"
+# \copybrief CharacterizeImageTask
+# \}
+
 
 class CharacterizeImageTask(pipeBase.CmdLineTask):
     """!Measure bright sources and use this to estimate background and PSF of an exposure
 
     @anchor CharacterizeImageTask_
-    
+
     @section pipe_tasks_characterizeImage_Contents  Contents
 
      - @ref pipe_tasks_characterizeImage_Purpose
@@ -280,7 +282,7 @@ class CharacterizeImageTask(pipeBase.CmdLineTask):
 
         @return same data as the characterize method
         """
-        self._frame = self._initialFrame # reset debug display frame
+        self._frame = self._initialFrame  # reset debug display frame
         self.log.info("Processing %s" % (dataRef.dataId))
 
         if doUnpersist:
@@ -335,7 +337,7 @@ class CharacterizeImageTask(pipeBase.CmdLineTask):
         - background: model of background subtracted from exposure (an lsst.afw.math.BackgroundList)
         - psfCellSet: spatial cells of PSF candidates (an lsst.afw.math.SpatialCellSet)
         """
-        self._frame = self._initialFrame # reset debug display frame
+        self._frame = self._initialFrame  # reset debug display frame
 
         if not self.config.doMeasurePsf and not exposure.hasPsf():
             raise RuntimeError("exposure has no PSF model and config.doMeasurePsf false")
@@ -350,7 +352,7 @@ class CharacterizeImageTask(pipeBase.CmdLineTask):
         estBg = estimateBackground(
             exposure = exposure,
             backgroundConfig = self.config.background,
-            subtract = False, # this makes a deep copy, which we don't want
+            subtract = False,  # this makes a deep copy, which we don't want
         )[0]
         image = exposure.getMaskedImage().getImage()
         image -= estBg.getImageF()
@@ -373,8 +375,8 @@ class CharacterizeImageTask(pipeBase.CmdLineTask):
             psfSigma = psf.computeShape().getDeterminantRadius()
             psfDimensions = psf.computeImage().getDimensions()
             medBackground = np.median(dmeRes.background.getImage().getArray())
-            self.log.info("iter %s; PSF sigma=%0.2f, dimensions=%s; median background=%0.2f" % \
-                (i + 1, psfSigma, psfDimensions, medBackground))
+            self.log.info("iter %s; PSF sigma=%0.2f, dimensions=%s; median background=%0.2f" %
+                          (i + 1, psfSigma, psfDimensions, medBackground))
 
         self.display("psf", exposure=dmeRes.exposure, sourceCat=dmeRes.sourceCat)
 
@@ -487,9 +489,9 @@ class CharacterizeImageTask(pipeBase.CmdLineTask):
             return
 
         displayAstrometry(
-                exposure = exposure,
-                sourceCat = sourceCat,
-                frame = self._frame,
-                pause = False,
-            )
+            exposure = exposure,
+            sourceCat = sourceCat,
+            frame = self._frame,
+            pause = False,
+        )
         self._frame += 1

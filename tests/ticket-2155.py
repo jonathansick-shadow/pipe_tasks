@@ -1,8 +1,8 @@
 #!/usr/bin/env python
-# 
+#
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
-# 
+#
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
 #
@@ -10,14 +10,14 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
-# You should have received a copy of the LSST License Statement and 
-# the GNU General Public License along with this program.  If not, 
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 import unittest
@@ -31,14 +31,15 @@ from lsst.meas.astrom import ANetAstrometryTask, ANetAstrometryConfig
 from lsst.meas.base import SingleFrameMeasurementTask, SingleFrameMeasurementConfig
 import lsst.utils.tests as utilsTests
 import lsst.afw.detection as afwDetection
-import lsst.afw.image   as afwImage
-import lsst.afw.table   as afwTable
+import lsst.afw.image as afwImage
+import lsst.afw.table as afwTable
 import lsst.pex.logging as pexLog
 
 import testFindAstrometryNetDataDir as helper
 
 
 class TestForceWcs(unittest.TestCase):
+
     def setUp(self):
         helper.setupAstrometryNetDataDir('t2155')
 
@@ -47,7 +48,7 @@ class TestForceWcs(unittest.TestCase):
         #exposure = afwImage.ExposureF('../afwdata/ImSim/calexp/v85408556-fr/R23/S11.fits')
         #bb = afwGeom.Box2I(afwGeom.Point2I(0,0), afwGeom.Point2I(511,511))
         #exposure = afwImage.ExposureF('data/goodSeeingCoadd/r/3/113,0/coadd-r-3-113,0.fits', 0, bb)
-        #exposure.writeFits('mini-r-3-113,0.fits')
+        # exposure.writeFits('mini-r-3-113,0.fits')
         fn = os.path.join(os.path.dirname(__file__), 'data', 'mini-r-3-113,0.fits.gz')
         print 'Reading image', fn
         exposure = afwImage.ExposureF(fn)
@@ -90,7 +91,8 @@ class TestForceWcs(unittest.TestCase):
             print 'outwcs:', outstr
             print len(ast.matches), 'matches'
             self.assertTrue(len(ast.matches) > 10)
-        #exposure.writeFits('out-2155.fits')
+        # exposure.writeFits('out-2155.fits')
+
 
 def suite():
     """Returns a suite containing all the test cases in this module."""
@@ -100,10 +102,11 @@ def suite():
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
     return unittest.TestSuite(suites)
 
+
 def run(exit=False):
     """Run the tests"""
     utilsTests.run(suite(), exit)
- 
+
 if __name__ == "__main__":
     run(True)
-    
+

@@ -26,6 +26,7 @@ import lsst.afw.table as afwTable
 import lsst.pex.config as pexConfig
 import lsst.pipe.base as pipeBase
 
+
 def makeContiguous(catalog):
     """!Return a version of the input catalog which is contiguous in memory."""
     if not catalog.isContiguous():
@@ -42,12 +43,13 @@ class TransformConfig(pexConfig.Config):
         default=('id', 'coord_ra', 'coord_dec')
     )
 
-## \addtogroup LSST_task_documentation
-## \{
-## \page TransformTask
-## \ref TransformTask_ "TransformTask"
-## \copybrief TransformTask
-## \}
+# \addtogroup LSST_task_documentation
+# \{
+# \page TransformTask
+# \ref TransformTask_ "TransformTask"
+# \copybrief TransformTask
+# \}
+
 
 class TransformTask(pipeBase.Task):
     """!
@@ -260,12 +262,12 @@ class RunTransformTaskBase(pipeBase.CmdLineTask):
         return outputCat
 
 
-## \addtogroup LSST_task_documentation
-## \{
-## \page SrcTransformTask
-## \ref SrcTransformTask_ "SrcTransformTask"
-## \copybrief SrcTransformTask
-## \}
+# \addtogroup LSST_task_documentation
+# \{
+# \page SrcTransformTask
+# \ref SrcTransformTask_ "SrcTransformTask"
+# \copybrief SrcTransformTask
+# \}
 
 class SrcTransformTask(RunTransformTaskBase):
     """!
@@ -285,12 +287,12 @@ class SrcTransformTask(RunTransformTaskBase):
         return self.butler.get(self.config.inputConfigType).calibrate.detectAndMeasure.measurement.value
 
 
-## \addtogroup LSST_task_documentation
-## \{
-## \page ForcedSrcTransformTask
-## \ref ForcedSrcTransformTask_ "ForcedSrcTransformTask"
-## \copybrief ForcedSrcTransformTask
-## \}
+# \addtogroup LSST_task_documentation
+# \{
+# \page ForcedSrcTransformTask
+# \ref ForcedSrcTransformTask_ "ForcedSrcTransformTask"
+# \copybrief ForcedSrcTransformTask
+# \}
 
 class ForcedSrcTransformTask(RunTransformTaskBase):
     """!
@@ -306,12 +308,12 @@ class ForcedSrcTransformTask(RunTransformTaskBase):
     calexpType = 'calexp'
 
 
-## \addtogroup LSST_task_documentation
-## \{
-## \page CoaddSrcTransformTask
-## \ref CoaddSrcTransformTask_ "CoaddSrcTransformTask"
-## \copybrief CoaddSrcTransformTask
-## \}
+# \addtogroup LSST_task_documentation
+# \{
+# \page CoaddSrcTransformTask
+# \ref CoaddSrcTransformTask_ "CoaddSrcTransformTask"
+# \copybrief CoaddSrcTransformTask
+# \}
 
 class CoaddSrcTransformTask(RunTransformTaskBase):
     """!

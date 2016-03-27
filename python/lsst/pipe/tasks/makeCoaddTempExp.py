@@ -34,6 +34,7 @@ from .coaddHelpers import groupPatchExposures, getGroupDataRef
 
 __all__ = ["MakeCoaddTempExpTask"]
 
+
 class MakeCoaddTempExpConfig(CoaddBaseTask.ConfigClass):
     """Config for MakeCoaddTempExpTask
     """
@@ -63,7 +64,7 @@ class MakeCoaddTempExpTask(CoaddBaseTask):
     """
     ConfigClass = MakeCoaddTempExpConfig
     _DefaultName = "makeCoaddTempExp"
-    
+
     def __init__(self, *args, **kwargs):
         CoaddBaseTask.__init__(self, *args, **kwargs)
         self.makeSubtask("warpAndPsfMatch")
@@ -71,15 +72,15 @@ class MakeCoaddTempExpTask(CoaddBaseTask):
     @pipeBase.timeMethod
     def run(self, patchRef, selectDataList=[]):
         """Produce <coaddName>Coadd_tempExp images
-        
+
         <coaddName>Coadd_tempExp are produced by PSF-matching (optional) and warping.
-        
+
         @param[in] patchRef: data reference for sky map patch. Must include keys "tract", "patch",
             plus the camera-specific filter key (e.g. "filter" or "band")
         @return: dataRefList: a list of data references for the new <coaddName>Coadd_tempExp
 
         @warning: this task assumes that all exposures in a coaddTempExp have the same filter.
-        
+
         @warning: this task sets the Calib of the coaddTempExp to the Calib of the first calexp
         with any good pixels in the patch. For a mosaic camera the resulting Calib should be ignored
         (assembleCoadd should determine zeropoint scaling without referring to it).

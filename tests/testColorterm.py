@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 from __future__ import absolute_import, division, print_function
-# 
+#
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
-# 
+#
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
 #
@@ -11,14 +11,14 @@ from __future__ import absolute_import, division, print_function
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
-# You should have received a copy of the LSST License Statement and 
-# the GNU General Public License along with this program.  If not, 
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
@@ -44,15 +44,17 @@ hamamatsu = ColortermLibrary(data={
     "ham*": ColortermDict(data={
         "g": Colorterm(primary="g", secondary="r", c0=-0.00928, c1=-0.0824),
         "r": Colorterm(primary="r", secondary="i", c0=-0.00282, c1=-0.0498, c2=-0.0149),
-        "i": Colorterm(primary="i", secondary="z", c0=0.00186,  c1=-0.140,  c2=-0.0196),
-        "z": Colorterm(primary="z", secondary="i", c0=-4.03e-4, c1=0.0967,  c2=0.0210),
+        "i": Colorterm(primary="i", secondary="z", c0=0.00186, c1=-0.140, c2=-0.0196),
+        "z": Colorterm(primary="z", secondary="i", c0=-4.03e-4, c1=0.0967, c2=0.0210),
     })
 })
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
 class ColortermTestCase(unittest.TestCase):
     """A test case for MaskedImage"""
+
     def setUp(self):
         self.sources = dict(g=0.0, r=0.0, true_g=-0.00928), dict(g=0.0, r=-1.0, true_g=-0.09168)
         self.colorterms = hamamatsu
@@ -71,14 +73,14 @@ class ColortermTestCase(unittest.TestCase):
 
     def testLibraryAccess(self):
         """Test ColortermLibrary.getColorterm"""
-        ctg = self.colorterms.getColorterm("g", photoCatName="ham") # exact match
+        ctg = self.colorterms.getColorterm("g", photoCatName="ham")  # exact match
         self.assertEqual(ctg.primary, "g")
         self.assertEqual(ctg.secondary, "r")
         self.assertAlmostEqual(ctg.c0, -0.00928)
         self.assertAlmostEqual(ctg.c1, -0.0824)
         self.assertAlmostEqual(ctg.c2, 0)
 
-        ctr = self.colorterms.getColorterm("r", photoCatName="hambone") # glob should expand
+        ctr = self.colorterms.getColorterm("r", photoCatName="hambone")  # glob should expand
         self.assertEqual(ctr.primary, "r")
         self.assertEqual(ctr.secondary, "i")
         self.assertAlmostEqual(ctr.c0, -0.00282)
@@ -90,7 +92,7 @@ class ColortermTestCase(unittest.TestCase):
 
         # bad catalog name: not in library
         self.assertRaises(ColortermNotFoundError, self.colorterms.getColorterm, "r", photoCatName="eggs")
-        
+
         # bad catalog name: glob expression
         self.assertRaises(ColortermNotFoundError, self.colorterms.getColorterm, "r", photoCatName="ha*")
 
@@ -109,6 +111,7 @@ class ColortermTestCase(unittest.TestCase):
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
 def suite():
     """Returns a suite containing all the test cases in this module."""
 
@@ -118,6 +121,7 @@ def suite():
     suites += unittest.makeSuite(ColortermTestCase)
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
     return unittest.TestSuite(suites)
+
 
 def run(shouldExit=False):
     """Run the tests"""

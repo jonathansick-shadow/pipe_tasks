@@ -45,6 +45,7 @@ np.random.seed(1)
 
 FilterName = "r"
 
+
 def loadData(pixelScale=1.0):
     """Prepare the data we need to run the example"""
 
@@ -66,6 +67,7 @@ def loadData(pixelScale=1.0):
     exposure.setWcs(wcs)
 
     return exposure
+
 
 class MyAstrometryTask(pipeBase.Task):
     """An override for CalibrateTask's astrometry task that fakes a solution"""
@@ -117,6 +119,7 @@ class MyAstrometryTask(pipeBase.Task):
             ),
         )
 
+
 def run(display=False):
     #
     # Create the tasks
@@ -145,6 +148,7 @@ def run(display=False):
     if display:
         displayFunc(calRes.exposure, calRes.sourceCat, frame=2)
 
+
 def displayFunc(exposure, sourceCat, frame):
     display = afwDisplay.getDisplay(frame)
     display.mtv(exposure)
@@ -162,7 +166,7 @@ if __name__ == "__main__":
 
     parser.add_argument('--debug', '-d', action="store_true", help="Load debug.py?", default=False)
     parser.add_argument('--display', action="store_true",
-        help="Display images in this example task (not using debug.py)", default=False)
+                        help="Display images in this example task (not using debug.py)", default=False)
 
     args = parser.parse_args()
 

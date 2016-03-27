@@ -27,11 +27,11 @@ import unittest
 
 import numpy as np
 
-import lsst.meas.astrom            as measAstrom
-import lsst.afw.geom               as afwGeom
-import lsst.afw.table              as afwTable
-import lsst.afw.image              as afwImage
-import lsst.utils.tests            as utilsTests
+import lsst.meas.astrom as measAstrom
+import lsst.afw.geom as afwGeom
+import lsst.afw.table as afwTable
+import lsst.afw.image as afwImage
+import lsst.utils.tests as utilsTests
 from lsst.pex.logging import Log
 from lsst.pipe.tasks.photoCal import PhotoCalTask, PhotoCalConfig
 
@@ -42,20 +42,22 @@ Log(Log.getDefaultLog(), "meas.astrom.astrometry_net", Log.WARN)
 Log(Log.getDefaultLog(), "meas.astrom.sip", Log.WARN)
 Log(Log.getDefaultLog(), "astrometricSolver", Log.WARN)
 
+
 class PhotoCalTest(unittest.TestCase):
 
     def setUp(self):
         self.conf = measAstrom.AstrometryConfig()
 
         # Load sample input from disk
-        testDir=os.path.dirname(__file__)
-        self.srcCat = afwTable.SourceCatalog.readFits(os.path.join(testDir, "data", "v695833-e0-c000.xy.fits"))
+        testDir = os.path.dirname(__file__)
+        self.srcCat = afwTable.SourceCatalog.readFits(
+            os.path.join(testDir, "data", "v695833-e0-c000.xy.fits"))
         self.srcCat["slot_ApFlux_fluxSigma"] = 1
         self.srcCat["slot_PsfFlux_fluxSigma"] = 1
 
         # The .xy.fits file has sources in the range ~ [0,2000],[0,4500]
         # which is bigger than the exposure
-        self.bbox = afwGeom.Box2I(afwGeom.Point2I(0,0), afwGeom.Extent2I(2048, 4612))
+        self.bbox = afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(2048, 4612))
         smallExposure = afwImage.ExposureF(os.path.join(testDir, "data", "v695833-e0-c000-a00.sci.fits"))
         self.exposure = afwImage.ExposureF(self.bbox)
         self.exposure.setWcs(smallExposure.getWcs())
@@ -110,16 +112,16 @@ class PhotoCalTest(unittest.TestCase):
         refFluxField = pCal.arrays.refFluxFieldList[0]
 
         # These are *all* the matches; we don't really expect to do that well.
-        diff=[]
+        diff = []
         for m in matches:
-            refFlux = m[0].get(refFluxField) # reference catalog flux
+            refFlux = m[0].get(refFluxField)  # reference catalog flux
             if refFlux <= 0:
                 continue
-            refMag = afwImage.abMagFromFlux(refFlux) # reference catalog mag
-            instFlux = m[1].getPsfFlux()    #Instrumental Flux
+            refMag = afwImage.abMagFromFlux(refFlux)  # reference catalog mag
+            instFlux = m[1].getPsfFlux()  # Instrumental Flux
             if instFlux <= 0:
                 continue
-            instMag = pCal.calib.getMagnitude(instFlux)     #Instrumental mag
+            instMag = pCal.calib.getMagnitude(instFlux)  # Instrumental mag
             diff.append(instMag - refMag)
         diff = np.array(diff)
 
@@ -153,6 +155,7 @@ class PhotoCalTest(unittest.TestCase):
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
 def suite():
     """Returns a suite containing all the test cases in this module."""
     utilsTests.init()
@@ -162,6 +165,7 @@ def suite():
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
 
     return unittest.TestSuite(suites)
+
 
 def run(exit=False):
     """Run the tests"""
